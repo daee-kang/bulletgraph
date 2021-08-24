@@ -7,16 +7,15 @@ function App() {
   const [points, setPoints] = useState([
     { name: 'bullet point 1', x: 5, unit: 'pH' },
     { name: 'bullet point 2', x: 1, unit: 'pH' },
-    { name: 'bullet point 3', x: 10.5, unit: 'pH' }
+    { name: 'bullet point 3', x: 369, unit: 'pH' }
   ]);
 
   const [ranges, setRanges] = useState({
-    type: 'finiteToFinite',
+    type: 'zeroToInfinite',
     ranges: [
-      { x: 0.0 },
-      { name: 'acidic', x: 6.5 },
-      { name: 'neutral', x: 8.5 },
-      { name: 'basic', x: 14.0 },
+      { name: 'acidic', x: 100 }, //[0, 100]
+      { name: 'neutral', x: 300 }, //(100, 300]
+      { name: 'basic' }, //(300, infinite]
     ]
   });
 
@@ -30,6 +29,16 @@ function App() {
       { name: 'basic', x: 14.0 }, //14.0 would be end point
     ]
   }
+
+  'zeroToInfinite': {
+    type: 'zeroToInfinite',
+    ranges: [
+      { name: 'acidic', x: 100 }, //[0, 100]
+      { name: 'neutral', x: 300 }, //(100, 300]
+      { name: 'basic' }, //(300, infinite]
+    ]
+  }
+
   */
 
   const randomizePoints = () => {
@@ -39,7 +48,7 @@ function App() {
     for (let i = 0; i < numPoints; i++) {
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 13.0 + 1).toPrecision(2),
+        x: (Math.random() * 10).toPrecision(2),
         unit: 'pH'
       });
     }

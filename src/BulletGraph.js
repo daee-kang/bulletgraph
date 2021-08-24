@@ -67,6 +67,7 @@ const BulletGraph = (props) => {
             } else {
                 //end
                 let width = getWidthOfRange(ranges[i - 1].x, ranges[i].x);
+                console.log(width);
 
                 ctx.fillStyle = colors[i];
                 ctx.fillRect(prevWidth, GRAPH_Y, width, GRAPH_HEIGHT);
@@ -80,12 +81,15 @@ const BulletGraph = (props) => {
 
                 prevWidth += width;
 
+                if (type === 'zeroToInfinite') { continue; } //don't draw lastlabel
                 //last element
                 if (i === ranges.length - 1) {
                     ctx.fillStyle = 'black';
                     ctx.textAlign = "end";
                     ctx.font = '18px serif';
-                    ctx.fillText(ranges[i].x, prevWidth, TEXT_Y);
+                    let x = ranges[i].x;
+                    if (x === undefined) x = getTotalRange();
+                    ctx.fillText(x, prevWidth, TEXT_Y);
                 }
             }
         }
@@ -93,11 +97,36 @@ const BulletGraph = (props) => {
     };
 
     const getTotalRange = () => {
-        if (type === 'finiteToFinite') {
-            let start = ranges[0].x;
-            let end = ranges[ranges.length - 1].x;
-            return end - start;
+        switch (type) {
+            case 'finiteToFinite': {
+                let start = ranges[0].x;
+                let end = ranges[ranges.length - 1].x;
+                return end - start;
+            }
+            case 'zeroToInfinite': {
+                let start = 0;
+
+                let maxValue = 0;
+                points.forEach(point => {
+                    if (point.x > maxValue) maxValue = parseFloat(point.x);
+                });
+                //basically our biggest point + 10% padding
+                let end = maxValue + maxValue * 0.10;
+
+                //if our biggest point is less than our ranges, don't use it, make sure all our ranges show
+                if (ranges.length >= 2) {
+                    let lastRange = ranges[ranges.length - 2].x; //x should be gauranteed to be here
+                    //we should try to keep the graph even
+                    let potentialEnd = Math.floor(lastRange + (lastRange * 1 / ranges.length));
+                    if (potentialEnd > end) end = potentialEnd;
+                }
+                return end - start;
+            }
+            default: break;
         }
+
+        return 0;
+
     };
 
     const getWidthOfRange = (start, end) => {
@@ -106,7 +135,9 @@ const BulletGraph = (props) => {
         let totalWidth = canvas.width;
         let totalRange = getTotalRange();
 
-        console.log(totalRange);
+        if (end === undefined && type === 'zeroToInfinite') {
+            end = totalRange;
+        }
 
         let d = end - start;
         let p = d / totalRange;
@@ -144,6 +175,7 @@ const BulletGraph = (props) => {
     };
 
     const drawLabel = (ctx, label, left, right) => {
+        if (right === undefined) { right = getTotalRange(); }
         const LABEL_Y = 130;
         //get world coords
         const wleft = getWorldX(left);
