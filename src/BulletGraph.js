@@ -122,6 +122,11 @@ const BulletGraph = (props) => {
                 }
                 return end - start;
             }
+            case 'zeroToFinite': {
+                let start = 0;
+                let end = ranges[ranges.length - 1].x;
+                return end - start;
+            }
             default: break;
         }
 

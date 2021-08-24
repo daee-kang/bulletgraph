@@ -5,17 +5,17 @@ import { useState } from 'react';
 
 function App() {
   const [points, setPoints] = useState([
-    { name: 'bullet point 1', x: 5, unit: 'pH' },
-    { name: 'bullet point 2', x: 1, unit: 'pH' },
-    { name: 'bullet point 3', x: 369, unit: 'pH' }
+    { name: 'bullet point 1', x: 10, unit: 'pH' },
+    { name: 'bullet point 2', x: 50, unit: 'pH' },
+    { name: 'bullet point 3', x: 400, unit: 'pH' }
   ]);
 
   const [ranges, setRanges] = useState({
-    type: 'zeroToInfinite',
+    type: 'zeroToFinite',
     ranges: [
       { name: 'acidic', x: 100 }, //[0, 100]
       { name: 'neutral', x: 300 }, //(100, 300]
-      { name: 'basic' }, //(300, infinite]
+      { name: 'basic', x: 500 }, //(300, 500]
     ]
   });
 
@@ -36,6 +36,15 @@ function App() {
       { name: 'acidic', x: 100 }, //[0, 100]
       { name: 'neutral', x: 300 }, //(100, 300]
       { name: 'basic' }, //(300, infinite]
+    ]
+  }
+
+  'zeroToFinite': {
+    type: 'zeroToFinite',
+    ranges: [
+      { name: 'acidic', x: 100 }, //[0, 100]
+      { name: 'neutral', x: 300 }, //(100, 300]
+      { name: 'basic', x: 500 }, //(300, 500]
     ]
   }
 
