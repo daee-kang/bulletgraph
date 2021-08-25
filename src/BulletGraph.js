@@ -9,7 +9,7 @@ const BulletGraph = (props) => {
     let TEXT_Y = 0;
 
     let { points, sensorRanges, colors } = props;
-    const { ranges, type } = sensorRanges;
+    let { ranges, type } = sensorRanges;
 
     /*
     ranges can be of different types
@@ -38,11 +38,27 @@ const BulletGraph = (props) => {
 
 
     //HELPER FUNCTIONS
+    //this func is for drawing when no ranges are included, we'll just create based on the type
+    const drawRange = (ctx) => {
+        if (type === 'infiniteToInfinite') {
+            //we can just add our own ranges, positive and negative
+            ranges = [
+                { name: 'negative', x: 0 },
+                { name: 'positive' }
+            ];
+
+            drawRanges(ctx);
+        }
+    };
+
     const drawRanges = (ctx) => {
         let start = 0;
 
         if (type === 'finiteToFinite') {
             start = ranges[0].x;
+        }
+        if (type === 'infiniteToInfinite') {
+            start = getLeftRightOfInfinites()[0];
         }
 
         let prevWidth = 0;
@@ -57,17 +73,18 @@ const BulletGraph = (props) => {
                 ctx.fillStyle = colors[i];
                 ctx.fillRect(0, GRAPH_Y, width, GRAPH_HEIGHT);
 
-                ctx.fillStyle = 'black';
-                ctx.textAlign = "start";
-                ctx.font = '18px serif';
-                ctx.fillText(start, 0, TEXT_Y);
+                if (type !== 'infiniteToInfinite') {
+                    ctx.fillStyle = 'black';
+                    ctx.textAlign = "start";
+                    ctx.font = '18px serif';
+                    ctx.fillText(start, 0, TEXT_Y);
+                }
 
-                drawLabel(ctx, ranges[i].name, 0, ranges[i].x);
+                drawLabel(ctx, ranges[i].name, start, ranges[i].x);
                 prevWidth += width;
             } else {
                 //end
                 let width = getWidthOfRange(ranges[i - 1].x, ranges[i].x);
-                console.log(width);
 
                 ctx.fillStyle = colors[i];
                 ctx.fillRect(prevWidth, GRAPH_Y, width, GRAPH_HEIGHT);
@@ -81,7 +98,10 @@ const BulletGraph = (props) => {
 
                 prevWidth += width;
 
-                if (type === 'zeroToInfinite') { continue; } //don't draw lastlabel
+                if (
+                    type === 'zeroToInfinite' ||
+                    type === 'infiniteToInfinite'
+                ) { continue; } //don't draw lastindicator
                 //last element
                 if (i === ranges.length - 1) {
                     ctx.fillStyle = 'black';
@@ -127,11 +147,61 @@ const BulletGraph = (props) => {
                 let end = ranges[ranges.length - 1].x;
                 return end - start;
             }
+            case 'infiniteToInfinite': {
+                const [start, end] = getLeftRightOfInfinites();
+                return Math.floor(end) - Math.floor(start);
+            }
             default: break;
         }
 
         return 0;
+    };
 
+    //used only for 'infiniteToInfinite'
+    const getLeftRightOfInfinites = () => {
+        //get everything in between
+        let start = null;
+        let end = null;
+        ranges.forEach(range => {
+            if (range.x) {
+                if (start === null) start = range.x;
+                end = range.x;
+            }
+        });
+
+        //get smallest and biggest point
+        let smallest = null;
+        let biggest = null;
+
+        points.forEach(point => {
+            if (smallest === null || point.x < smallest) {
+                smallest = point.x;
+            }
+
+            if (biggest === null || point.x > biggest) {
+                biggest = point.x;
+            }
+        });
+
+        //this would create an even graph
+        let potentialLeft = start - (end - start) / 2;
+        let potentialRight = end + (end - start) / 2;
+
+        //now check to see if any points go past these
+        start = smallest < potentialLeft ?
+            smallest :
+            potentialLeft;
+
+        end = biggest > potentialRight ?
+            biggest :
+            potentialRight;
+
+        //we are just going to add padding no matter what to both sides
+        let rangeBeforePadding = end - start;
+        start = start - rangeBeforePadding * 0.10;
+        end = end + rangeBeforePadding * 0.10;
+
+        return [start, end];
     };
 
     const getWidthOfRange = (start, end) => {
@@ -142,6 +212,9 @@ const BulletGraph = (props) => {
 
         if (end === undefined && type === 'zeroToInfinite') {
             end = totalRange;
+        }
+        if (end === undefined && type === 'infiniteToInfinite') {
+            end = getLeftRightOfInfinites()[1];
         }
 
         let d = end - start;
@@ -158,6 +231,9 @@ const BulletGraph = (props) => {
 
         if (type === 'finiteToFinite') {
             start = ranges[0].x;
+        }
+        if (type === 'infiniteToInfinite') {
+            start = getLeftRightOfInfinites()[0];
         }
 
         return ((x - start) / totalRange) * totalWidth;
@@ -180,7 +256,13 @@ const BulletGraph = (props) => {
     };
 
     const drawLabel = (ctx, label, left, right) => {
-        if (right === undefined) { right = getTotalRange(); }
+        if (right === undefined) {
+            if (type === 'infiniteToInfinite') {
+                right = getLeftRightOfInfinites()[1];
+            } else {
+                right = getTotalRange();
+            }
+        }
         const LABEL_Y = 130;
         //get world coords
         const wleft = getWorldX(left);
@@ -196,11 +278,11 @@ const BulletGraph = (props) => {
     //DRAW
     const draw = ctx => {
         //DRAW THE RANGES or RANGE
-        if (ranges) {
+        if (ranges !== undefined) {
             drawRanges(ctx);
         } else {
             //just draw default range
-            drawRanges(ctx);
+            drawRange(ctx);
         }
 
         //DRAW THE POINTS

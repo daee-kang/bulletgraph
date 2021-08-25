@@ -5,19 +5,16 @@ import { useState } from 'react';
 
 function App() {
   const [points, setPoints] = useState([
-    { name: 'bullet point 1', x: 10, unit: 'pH' },
-    { name: 'bullet point 2', x: 50, unit: 'pH' },
-    { name: 'bullet point 3', x: 400, unit: 'pH' }
+    { name: 'bullet point 1', x: -500, unit: 'pH' },
+    { name: 'bullet point 2', x: 100, unit: 'pH' },
+    { name: 'bullet point 3', x: 3000, unit: 'pH' }
   ]);
 
-  const [ranges, setRanges] = useState({
-    type: 'zeroToFinite',
-    ranges: [
-      { name: 'acidic', x: 100 }, //[0, 100]
-      { name: 'neutral', x: 300 }, //(100, 300]
-      { name: 'basic', x: 500 }, //(300, 500]
-    ]
-  });
+  const [ranges, setRanges] = useState(
+    {
+      type: 'infiniteToInfinite'
+    }
+  );
 
   /* 
   'finiteToFinite': {
@@ -57,7 +54,7 @@ function App() {
     for (let i = 0; i < numPoints; i++) {
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 10).toPrecision(2),
+        x: (Math.random() * 500 - 250),
         unit: 'pH'
       });
     }
@@ -68,7 +65,7 @@ function App() {
   return (
     <div className="App">
       {/* the style on the div is just for a test on screen responsiveness */}
-      <div style={{ width: '80%', backgroundColor: 'gray' }}>
+      <div>
         <BulletGraph points={points} sensorRanges={ranges} />
       </div>
 
