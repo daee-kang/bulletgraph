@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 function App() {
   const [points, setPoints] = useState([
-    //{ name: 'x', x: 0.2 }
+    { name: 'x', x: 5 }
   ]);
 
   const [ranges, setRanges] = useState(
