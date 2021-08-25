@@ -128,9 +128,9 @@ const BulletGraph = (props) => {
     };
 
     const drawPoint = (ctx, startx, starty) => {
-        ctx.fillStyle = "white";
-        ctx.strokeStyle = "gray";
-        ctx.lineWidth = 3;
+        ctx.fillStyle = "#0495b8";
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(startx, starty);
         ctx.lineTo(startx + 15, starty - 20);
@@ -142,6 +142,13 @@ const BulletGraph = (props) => {
         //reset
         ctx.lineWidth = 1;
     };
+
+    const drawNumber = (ctx, index) => {
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        ctx.font = 'serif'
+        ctx.fillText(index)
+    }
 
     const drawLabel = (ctx, label, left, right) => {
         const LABEL_Y = 130;
