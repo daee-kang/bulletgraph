@@ -5,9 +5,7 @@ import { useState } from 'react';
 
 function App() {
   const [points, setPoints] = useState([
-    { name: 'bullet point 1', x: -500, unit: 'pH' },
-    { name: 'bullet point 2', x: 100, unit: 'pH' },
-    { name: 'bullet point 3', x: 3000, unit: 'pH' }
+    { name: 'x', x: -100 }
   ]);
 
   const [ranges, setRanges] = useState(
@@ -32,7 +30,7 @@ function App() {
     ranges: [
       { name: 'acidic', x: 100 }, //[0, 100]
       { name: 'neutral', x: 300 }, //(100, 300]
-      { name: 'basic' }, //(300, infinite]
+      { name: 'basic' }, //(300, infinite] //no x here!!!
     ]
   }
 
@@ -50,7 +48,7 @@ function App() {
     ranges: [ //you can leave ranges undefined and it will display negative/positive
       { name: 'acidic', x: 100 }, //[0, 100]
       { name: 'neutral', x: 300 }, //(100, 300]
-      { name: 'basic'}, //(300, 500]
+      { name: 'basic'}, //(300, 500] //no x here!!!
     ]
   }
 
@@ -63,7 +61,7 @@ function App() {
     for (let i = 0; i < numPoints; i++) {
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 500 - 250),
+        x: (Math.random() * 800),
         unit: 'pH'
       });
     }

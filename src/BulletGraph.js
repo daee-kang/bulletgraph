@@ -160,6 +160,10 @@ const BulletGraph = (props) => {
 
     //used only for 'infiniteToInfinite'
     const getLeftRightOfInfinites = () => {
+        if (points.length === 0) {
+            return [-100, 100];
+        }
+
         //get everything in between
         let start = null;
         let end = null;
@@ -279,11 +283,10 @@ const BulletGraph = (props) => {
     //DRAW
     const draw = ctx => {
         //DRAW THE RANGES or RANGE
-        if (ranges !== undefined) {
-            drawRanges(ctx);
-        } else {
-            //just draw default range
+        if (ranges === undefined || ranges.length <= 1) { //should we even customize ranges if theres only one
             drawRange(ctx);
+        } else {
+            drawRanges(ctx);
         }
 
         //DRAW THE POINTS
