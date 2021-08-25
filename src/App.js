@@ -20,6 +20,8 @@ function App() {
     }
   );
 
+  const [unit, SetUnit] = useState("pH")
+
   /* 
   'finiteToFinite': {
     type: 'finiteToFinite',
@@ -76,8 +78,7 @@ function App() {
     for (let i = 0; i < numPoints; i++) {
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 13 + 1),
-        unit: 'pH'
+        x: (Math.random() * 13 + 1)
       });
     }
 
@@ -91,6 +92,7 @@ function App() {
         <BulletGraph
           points={points}
           sensorRanges={ranges}
+          unit={unit}
           barWidth={25}
           fixed={1}
         />

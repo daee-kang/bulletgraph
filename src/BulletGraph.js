@@ -12,6 +12,7 @@ const BulletGraph = (props) => {
         barWidth = 20, //OPTIONAL: width of the big bar, default value is 20
         fixed, //OPTIONAL: sets precision to axis labels
         barPadding = 20, //OPTIONAL: sets padding on the left and right of bar, this is useful so points can be displayed if cut off, default is 20
+        unit,
     } = props;
 
     let { ranges, type } = sensorRanges;
@@ -396,7 +397,7 @@ const BulletGraph = (props) => {
         ctx.fillStyle = 'black';
         ctx.textAlign = align;
         ctx.font = '12px Rubik';
-        ctx.fillText(text, x, y);
+        ctx.fillText(text + ' ' + unit, x, y);
     };
 
     const drawNumber = (ctx, count, xAxis, yAxis, isHovered) => {
@@ -489,6 +490,7 @@ const BulletGraph = (props) => {
     };
 
     useEffect(() => {
+        
         const canvas = canvasRef.current;
 
         canvas.style.width = "100%";
