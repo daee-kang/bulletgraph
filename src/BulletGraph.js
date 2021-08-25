@@ -7,6 +7,7 @@ const BulletGraph = (props) => {
     let GRAPH_HEIGHT = 0;
     let GRAPH_Y = 0;
     let TEXT_Y = 0;
+    const PADDING = 0.10; //padding is percentage of range and only used for infinite graphs
 
     let { points, sensorRanges, colors } = props;
     let { ranges, type } = sensorRanges;
@@ -131,7 +132,7 @@ const BulletGraph = (props) => {
                     if (point.x > maxValue) maxValue = parseFloat(point.x);
                 });
                 //basically our biggest point + 10% padding
-                let end = maxValue + maxValue * 0.10;
+                let end = maxValue + maxValue * PADDING;
 
                 //if our biggest point is less than our ranges, don't use it, make sure all our ranges show
                 if (ranges.length >= 2) {
@@ -198,8 +199,8 @@ const BulletGraph = (props) => {
 
         //we are just going to add padding no matter what to both sides
         let rangeBeforePadding = end - start;
-        start = start - rangeBeforePadding * 0.10;
-        end = end + rangeBeforePadding * 0.10;
+        start = start - rangeBeforePadding * PADDING;
+        end = end + rangeBeforePadding * PADDING;
 
         return [start, end];
     };
