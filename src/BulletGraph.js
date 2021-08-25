@@ -24,6 +24,11 @@ const BulletGraph = (props) => {
     const BAR_PADDING = barPadding;
     const PADDING = 0.10; //padding is percentage of range and only used for infinite graphs
 
+    const [zoom, setZoom] = useState(1);
+    let panX = 0;
+    let netPanning = 0;
+    let panning = false;
+
     let hoveredPoint = null;
 
     /*
@@ -85,6 +90,9 @@ const BulletGraph = (props) => {
         }
 
         let prevWidth = BAR_PADDING;
+        prevWidth += netPanning;
+
+        console.log(prevWidth);
         for (let i = 0; i < ranges.length; i++) {
             if (i === 0 && type === 'finiteToFinite') continue;
 
@@ -240,7 +248,7 @@ const BulletGraph = (props) => {
     const getWidthOfRange = (start, end) => {
         let canvas = canvasRef.current;
 
-        let totalWidth = canvas.width - BAR_PADDING * 2;
+        let totalWidth = canvas.width * zoom - BAR_PADDING * 2;
         let totalRange = getTotalRange();
 
         if (end === undefined && type === 'zeroToInfinite') {
@@ -258,7 +266,7 @@ const BulletGraph = (props) => {
 
     const getWorldX = (x) => {
         const totalRange = getTotalRange();
-        const totalWidth = canvasRef.current.width - BAR_PADDING * 2;
+        const totalWidth = canvasRef.current.width * zoom - BAR_PADDING * 2;
 
         let start = 0;
 
@@ -269,7 +277,7 @@ const BulletGraph = (props) => {
             start = getLeftRightOfInfinites()[0];
         }
 
-        return ((x - start) / totalRange) * totalWidth + BAR_PADDING;
+        return ((x - start) / totalRange) * totalWidth + BAR_PADDING + netPanning;
     };
 
     const drawPoint = (ctx, startx, starty, isHover) => {
@@ -417,7 +425,7 @@ const BulletGraph = (props) => {
             }
         }
 
-        const LABEL_Y = 130;
+        const LABEL_Y = GRAPH_HEIGHT + GRAPH_Y + 40;
         //get world coords
         const wleft = getWorldX(left);
         const wright = getWorldX(right);
@@ -427,6 +435,15 @@ const BulletGraph = (props) => {
         ctx.textAlign = "center";
         ctx.font = 'bold 16px Rubik';
         ctx.fillText(label, mid, LABEL_Y);
+    };
+
+    const zoomIn = () => {
+        setZoom(zoom + 1);
+    };
+
+    const zoomOut = () => {
+        if (zoom - 1 < 1) return;
+        setZoom(zoom - 1);
     };
 
     //DRAW
@@ -461,6 +478,8 @@ const BulletGraph = (props) => {
         drawnPoints.reverse();
 
         canvasRef.current.onmousemove = function (e) {
+            if (zoom !== 1) panEventHandler(e);
+
             let x = e.clientX;
             let y = e.clientY;
 
@@ -485,12 +504,22 @@ const BulletGraph = (props) => {
                 draw(ctx);
             }
         };
+    };
 
+    //we need to keep this event handler seperate so we can add it ontop of our mouse hover
+    const panEventHandler = (e) => {
+        if (!panning) return;
 
+        let mouseX = parseInt(e.clientX);
+        let dx = mouseX - panX;
+        panX = mouseX;
+
+        netPanning += dx;
+        console.log('netchange in panning is', netPanning + dx);
+        draw(canvasRef.current.getContext('2d'));
     };
 
     useEffect(() => {
-        
         const canvas = canvasRef.current;
 
         canvas.style.width = "100%";
@@ -516,16 +545,52 @@ const BulletGraph = (props) => {
             draw(context);
         };
         window.addEventListener('resize', updateSize);
-
         draw(context);
-        return () => window.removeEventListener('resize', updateSize);
-    }, [points, props]);
+        if (zoom !== 1) {
+            canvas.onmousedown = function (e) {
+                panning = true;
 
-    return <canvas
-        className="bullet-graph"
-        ref={canvasRef}
-        {...props}
-    />;
+                panX = e.clientX;
+                console.log(e.clientX);
+            };
+
+            canvas.onmouseup = function (e) {
+                panning = false;
+            };
+
+            canvas.onmouseout = function (e) {
+                panning = false;
+            };
+
+            canvas.onmousemove = function (e) {
+                panEventHandler(e);
+            };
+        } else {
+            netPanning = 0;
+        }
+        return () => window.removeEventListener('resize', updateSize);
+    }, [points, zoom, props]);
+
+    return <div style={{ height: '200px' }}>
+        <canvas
+            className="bullet-graph"
+            ref={canvasRef}
+            {...props}
+            style={{
+                cursor: `${zoom !== 1 ? 'grab' : 'default'}`
+            }}
+        />
+        <span
+            style={{
+                position: 'absolute',
+                right: `${BAR_PADDING}px`,
+                top: '20px'
+            }}
+        >
+            <button className="zoom" onClick={zoomIn}>+</button>
+            <button className="zoom" onClick={zoomOut}>-</button>
+        </span>
+    </div>;
 };
 
 export default BulletGraph;

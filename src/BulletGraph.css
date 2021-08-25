@@ -2,4 +2,16 @@
 
 .bullet-graph {
     font-family: 'Rubik', sans-serif;
+    position: relative;
+}
+
+.menu {
+    position: absolute;
+    right: 20px;
+}
+
+.zoom {
+    height: 30px;
+    width: 30px;
+    border-radius: 15px;
 }
