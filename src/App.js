@@ -1,16 +1,19 @@
-import logo from './logo.svg';
 import './App.css';
 import BulletGraph from './BulletGraph';
 import { useState } from 'react';
 
 function App() {
   const [points, setPoints] = useState([
-    { name: 'x', x: -100 }
+    //{ name: 'x', x: 0.2 }
   ]);
 
   const [ranges, setRanges] = useState(
     {
-      type: 'infiniteToInfinite'
+      type: 'percentage',
+      ranges: [
+        { name: 'ok', x: 0.3 },
+        { name: 'bad', x: 1.0 }
+      ]
     }
   );
 
@@ -45,10 +48,19 @@ function App() {
 
   'infiniteToInfinite': {
     type: 'infiniteToInfinite',
-    ranges: [ //you can leave ranges undefined and it will display negative/positive
+    ranges: [ //OPTIONAL: you can leave ranges undefined and it will display negative/positive
       { name: 'acidic', x: 100 }, //[0, 100]
       { name: 'neutral', x: 300 }, //(100, 300]
       { name: 'basic'}, //(300, 500] //no x here!!!
+    ]
+  }
+
+  'percentage': {
+    type: 'percentage',
+    ranges: [ //OPTIONAL: we can leave labeled ranges as undefined and it will just be 0% to 100%
+      {name: 'ok', x: 0.20},
+      {name: 'hey', x: 0.50},
+      {name: 'no', x: 1} //if using labeled ranges, there at least needs to be one that goes up to 1
     ]
   }
 
@@ -61,7 +73,7 @@ function App() {
     for (let i = 0; i < numPoints; i++) {
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 800),
+        x: (Math.random()),
         unit: 'pH'
       });
     }

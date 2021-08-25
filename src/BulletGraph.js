@@ -48,8 +48,19 @@ const BulletGraph = (props) => {
                 { name: 'positive' }
             ];
 
-            drawRanges(ctx);
+        } else if (type === 'percentage') {
+            ranges = [
+                { name: '', x: 1 } //yeah its hacky buttttttttttttt 
+            ];
+
+            //just draw the last label since our for loop in drawranges won't hit this last part
+            ctx.fillStyle = 'black';
+            ctx.textAlign = "end";
+            ctx.font = '18px serif';
+            ctx.fillText('100%', getWidthOfRange(0, 1), TEXT_Y);
         }
+
+        drawRanges(ctx);
     };
 
     const drawRanges = (ctx) => {
@@ -78,7 +89,9 @@ const BulletGraph = (props) => {
                     ctx.fillStyle = 'black';
                     ctx.textAlign = "start";
                     ctx.font = '18px serif';
-                    ctx.fillText(start, 0, TEXT_Y);
+                    let text = start;
+                    if (type === 'percentage') text = "0%";
+                    ctx.fillText(text, 0, TEXT_Y);
                 }
 
                 drawLabel(ctx, ranges[i].name, start, ranges[i].x);
@@ -93,7 +106,9 @@ const BulletGraph = (props) => {
                 ctx.fillStyle = 'black';
                 ctx.textAlign = "center";
                 ctx.font = '18px serif';
-                ctx.fillText(ranges[i - 1].x, prevWidth, TEXT_Y);
+                let text = ranges[i - 1].x;
+                if (type === 'percentage') text = `${ranges[i - 1].x * 100}%`;
+                ctx.fillText(text, prevWidth, TEXT_Y);
 
                 drawLabel(ctx, ranges[i].name, ranges[i - 1].x, ranges[i].x);
 
@@ -110,6 +125,7 @@ const BulletGraph = (props) => {
                     ctx.font = '18px serif';
                     let x = ranges[i].x;
                     if (x === undefined) x = getTotalRange();
+                    if (type === 'percentage') x = '100%';
                     ctx.fillText(x, prevWidth, TEXT_Y);
                 }
             }
@@ -151,6 +167,9 @@ const BulletGraph = (props) => {
             case 'infiniteToInfinite': {
                 const [start, end] = getLeftRightOfInfinites();
                 return Math.floor(end) - Math.floor(start);
+            }
+            case 'percentage': {
+                return 1;
             }
             default: break;
         }
@@ -268,6 +287,7 @@ const BulletGraph = (props) => {
                 right = getTotalRange();
             }
         }
+
         const LABEL_Y = 130;
         //get world coords
         const wleft = getWorldX(left);
