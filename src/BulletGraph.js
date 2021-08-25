@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './BulletGraph.css';
 
 const BulletGraph = (props) => {
@@ -22,6 +22,8 @@ const BulletGraph = (props) => {
     let TEXT_Y = 0; //this const is set in useEffect
     const BAR_PADDING = barPadding;
     const PADDING = 0.10; //padding is percentage of range and only used for infinite graphs
+
+    let hoveredPoint = null;
 
     /*
     ranges can be of different types
@@ -269,23 +271,69 @@ const BulletGraph = (props) => {
         return ((x - start) / totalRange) * totalWidth + BAR_PADDING;
     };
 
-    const drawPoint = (ctx, startx, starty) => {
+    const drawPoint = (ctx, startx, starty, isHover) => {
         ctx.fillStyle = "white";
-        ctx.strokeStyle = "grey";
+        ctx.strokeStyle = isHover ? "black" : "grey";
         ctx.lineWidth = 1.5;
         const borderRadius = 10;
+        const scale = isHover ? 1.1 : 1;
         let points = [
             [startx, starty + 4],
-            [startx + GRAPH_HEIGHT * 0.75, starty - GRAPH_HEIGHT],
-            [startx - GRAPH_HEIGHT * 0.75, starty - GRAPH_HEIGHT]
+            [startx + GRAPH_HEIGHT * 0.75 * scale, starty - GRAPH_HEIGHT * scale],
+            [startx - GRAPH_HEIGHT * 0.75 * scale, starty - GRAPH_HEIGHT * scale]
         ];
-        drawPolygon(ctx, points, borderRadius);
-        ctx.fill();
-        ctx.stroke();
+        let point = new Path2D();
+        drawPolygon(point, points, borderRadius);
 
-        //reset
-        ctx.lineWidth = 1;
+        ctx.fill(point);
+        ctx.stroke(point);
+
+        return point;
     };
+
+    const drawTooltip = (ctx, point) => {
+        let x = getWorldX(point.value);
+        let y = GRAPH_HEIGHT + GRAPH_Y + 2;
+
+        //possible things to draw: name, value, index
+
+        const tooltipPadding = 10;
+        //find max width
+        let toFindWidths = [];
+
+        //if just comment out one of these lines if we don't want it for sure across the graph
+        if (point.value !== undefined) toFindWidths.push(`value: ${point.value}`);
+        if (point.name !== undefined) toFindWidths.push(point.name);
+        if (point.index !== undefined) toFindWidths.push(point.index);
+        let maxWidth = Math.max(...toFindWidths.map(w => ctx.measureText(w).width)) + tooltipPadding * 2;
+
+        //adjust x if going past boundaries based on max width
+        if (x - maxWidth / 2 < BAR_PADDING) x = maxWidth / 2 + BAR_PADDING;
+        if (x + maxWidth / 2 > canvasRef.current.width - BAR_PADDING) x = canvasRef.current.width - BAR_PADDING - maxWidth / 2;
+
+        let height = 12; //no method to find calculated height
+        let totalHeight = height * toFindWidths.length + (2 * toFindWidths.length - 1);
+
+        ctx.fillStyle = 'black';
+        ctx.globalAlpha = 0.75;
+        ctx.fillRect(x - maxWidth / 2, y, maxWidth, totalHeight + tooltipPadding * 2);
+        ctx.globalAlpha = 1.0;
+
+        ctx.fillStyle = 'white';
+        ctx.font = '12px Rubik';
+        ctx.textAlign = 'center';
+
+        if (point.index !== undefined) {
+            ctx.fillText(`Index: ${point.index + 1}`, x, y + 10 + tooltipPadding);
+            y += 14;
+        }
+        if (point.name !== undefined) {
+            ctx.fillText(`Name: ${point.name}`, x, y + 10 + tooltipPadding);
+            y += 14;
+        }
+        ctx.fillText(`Value: ${point.value}`, x, y + 10 + tooltipPadding);
+    };
+
     //https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-using-html-canvas
     const drawPolygon = (ctx, pts, radius) => {
         const getRoundedPoints = (pts, radius) => {
@@ -321,7 +369,7 @@ const BulletGraph = (props) => {
             pts = getRoundedPoints(pts, radius);
         }
         var i, pt, len = pts.length;
-        ctx.beginPath();
+        //ctx.beginPath();
         for (i = 0; i < len; i++) {
             pt = pts[i];
             if (i === 0) {
@@ -351,12 +399,13 @@ const BulletGraph = (props) => {
         ctx.fillText(text, x, y);
     };
 
-    const drawNumber = (ctx, count, xAxis, yAxis) => {
+    const drawNumber = (ctx, count, xAxis, yAxis, isHovered) => {
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
-        ctx.font = 'serif'
-        ctx.fillText(count, xAxis, yAxis - 30)
-    }
+        ctx.font = '12px Rubik';
+        const padding = isHovered ? 15 : 10;
+        ctx.fillText(count, xAxis, yAxis - GRAPH_HEIGHT - padding);
+    };
 
     const drawLabel = (ctx, label, left, right) => {
         if (right === undefined) {
@@ -381,6 +430,10 @@ const BulletGraph = (props) => {
 
     //DRAW
     const draw = ctx => {
+        //clear the canvas on redraw
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        canvasRef.current.onmousemove = null;
+
         //DRAW THE RANGES or RANGE
         if (ranges === undefined || ranges.length <= 1) { //should we even customize ranges if theres only one
             drawRange(ctx);
@@ -388,12 +441,49 @@ const BulletGraph = (props) => {
             drawRanges(ctx);
         }
 
+        let drawnPoints = [];
+
         //DRAW THE POINTS
         for (let i = 0; i < points.length; i++) {
-            drawPoint(ctx, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y);
+            let point = drawPoint(ctx, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y);
+            drawnPoints.push({
+                path: point,
+                name: points[i].name,
+                value: points[i].x,
+                index: i
+            });
             //draw labels eventually
-            drawNumber(ctx, i + 1, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y)
+            drawNumber(ctx, i + 1, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y, hoveredPoint === i);
         }
+
+        //we reverse the array so we priority is given to the later points when hovering
+        drawnPoints.reverse();
+
+        canvasRef.current.onmousemove = function (e) {
+            let x = e.clientX;
+            let y = e.clientY;
+
+            for (let point of drawnPoints) {
+                if (ctx.isPointInPath(point.path, x, y)) {
+                    if (hoveredPoint !== point.index) {
+                        hoveredPoint = point.index;
+                        //draw to remove previous hovered point in case there was one
+                        draw(ctx);
+                        //draw our hovered point, this is a cheap trick, just draw on top of all the other points
+                        drawPoint(ctx, getWorldX(point.value), GRAPH_HEIGHT + GRAPH_Y, true);
+
+                        drawTooltip(ctx, point);
+                    }
+                    return;
+                }
+            }
+
+            if (hoveredPoint !== null) {
+                hoveredPoint = null;
+                //draw to reset drawn hovered point
+                draw(ctx);
+            }
+        };
 
 
     };
@@ -424,9 +514,6 @@ const BulletGraph = (props) => {
             draw(context);
         };
         window.addEventListener('resize', updateSize);
-
-        //clear the canvas on redraw
-        context.clearRect(0, 0, canvas.width, canvas.height);
 
         draw(context);
         return () => window.removeEventListener('resize', updateSize);
