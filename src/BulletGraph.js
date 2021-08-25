@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import './BulletGraph.css';
 
 const BulletGraph = (props) => {
     const canvasRef = useRef(null);
-    let { points, sensorRanges, colors, barWidth } = props;
+    let { points, sensorRanges, colors, barWidth, precision } = props;
     let { ranges, type } = sensorRanges;
 
     //'consts' set in useeffect since it is dependent on our size
@@ -49,7 +50,7 @@ const BulletGraph = (props) => {
             //just draw the last label since our for loop in drawranges won't hit this last part
             ctx.fillStyle = 'black';
             ctx.textAlign = "end";
-            ctx.font = '18px serif';
+            ctx.font = '12px Rubik';
             ctx.fillText('100%', getWidthOfRange(0, 1), TEXT_Y);
         }
 
@@ -87,7 +88,7 @@ const BulletGraph = (props) => {
                 if (type !== 'infiniteToInfinite') {
                     ctx.fillStyle = 'black';
                     ctx.textAlign = "start";
-                    ctx.font = '18px serif';
+                    ctx.font = '12px Rubik';
                     let text = start;
                     if (type === 'percentage') text = "0%";
                     ctx.fillText(text, 0, TEXT_Y);
@@ -104,7 +105,7 @@ const BulletGraph = (props) => {
 
                 ctx.fillStyle = 'black';
                 ctx.textAlign = "center";
-                ctx.font = '18px serif';
+                ctx.font = '12px Rubik';
                 let text = ranges[i - 1].x;
                 if (type === 'percentage') text = `${ranges[i - 1].x * 100}%`;
                 ctx.fillText(text, prevWidth, TEXT_Y);
@@ -121,7 +122,7 @@ const BulletGraph = (props) => {
                 if (i === ranges.length - 1) {
                     ctx.fillStyle = 'black';
                     ctx.textAlign = "end";
-                    ctx.font = '18px serif';
+                    ctx.font = '12px Rubik';
                     let x = ranges[i].x;
                     if (x === undefined) x = getTotalRange();
                     if (type === 'percentage') x = '100%';
@@ -263,12 +264,12 @@ const BulletGraph = (props) => {
     };
 
     const drawPoint = (ctx, startx, starty) => {
-        ctx.fillStyle = "white";
-        ctx.strokeStyle = "gray";
+        ctx.fillStyle = "#F5F5F5";
+        ctx.strokeStyle = "#585858";
         ctx.lineWidth = 3;
-        const borderRadius = 5;
+        const borderRadius = 10;
         let points = [
-            [startx, starty],
+            [startx, starty + 4],
             [startx + GRAPH_HEIGHT * 0.75, starty - GRAPH_HEIGHT],
             [startx - GRAPH_HEIGHT * 0.75, starty - GRAPH_HEIGHT]
         ];
@@ -344,9 +345,9 @@ const BulletGraph = (props) => {
         const wright = getWorldX(right);
         const mid = wleft + ((wright - wleft) / 2); //avoid overflow if it ever for some reason happens idk dude
 
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = '#383838';
         ctx.textAlign = "center";
-        ctx.font = '24px serif';
+        ctx.font = 'bold 16px Rubik';
         ctx.fillText(label, mid, LABEL_Y);
     };
 
@@ -403,6 +404,7 @@ const BulletGraph = (props) => {
     }, [points, props]);
 
     return <canvas
+        className="bullet-graph"
         ref={canvasRef}
         {...props}
     />;

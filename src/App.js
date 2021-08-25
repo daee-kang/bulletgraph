@@ -9,10 +9,12 @@ function App() {
 
   const [ranges, setRanges] = useState(
     {
-      type: 'percentage',
+      type: 'finiteToFinite',
       ranges: [
-        { name: 'ok', x: 0.3 },
-        { name: 'bad', x: 1.0 }
+        { x: 1.0 }, //our start point
+        { name: 'Acidic', x: 6.5 },
+        { name: 'Neutral', x: 8.5 },
+        { name: 'Basic', x: 14.0 }, //14.0 would be end point
       ]
     }
   );
@@ -73,7 +75,7 @@ function App() {
     for (let i = 0; i < numPoints; i++) {
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random()),
+        x: (Math.random() * 13 + 1),
         unit: 'pH'
       });
     }
@@ -84,13 +86,15 @@ function App() {
   return (
     <div className="App">
       {/* the style on the div is just for a test on screen responsiveness */}
-      <div>
+      <div style={{ width: '90%', margin: '20px' }}>
         <BulletGraph
           points={points}
           sensorRanges={ranges}
           barWidth={25}
+          precision={1}
         />
       </div>
+
 
       <button onClick={randomizePoints}> randomize points</button>
       {points.map(point => <div>{point.name} : {point.x}</div>)}
