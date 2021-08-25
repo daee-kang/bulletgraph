@@ -351,12 +351,12 @@ const BulletGraph = (props) => {
         ctx.fillText(text, x, y);
     };
 
-    const drawNumber = (ctx, index) => {
+    const drawNumber = (ctx, count, xAxis, yAxis) => {
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
-        ctx.font = 'serif';
-        ctx.fillText(index);
-    };
+        ctx.font = 'serif'
+        ctx.fillText(count, xAxis, yAxis - 30)
+    }
 
     const drawLabel = (ctx, label, left, right) => {
         if (right === undefined) {
@@ -392,6 +392,7 @@ const BulletGraph = (props) => {
         for (let i = 0; i < points.length; i++) {
             drawPoint(ctx, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y);
             //draw labels eventually
+            drawNumber(ctx, i + 1, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y)
         }
 
 
