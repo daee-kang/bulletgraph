@@ -4,17 +4,18 @@ import { useState } from 'react';
 
 function App() {
   const [points, setPoints] = useState([
-    { name: 'x', x: 5 }
+    { name: 'yo', x: 1.043209570392157231 },
+    { name: 'this', x: 13.843209570392157231 },
+    { name: 'works', x: 900 }
   ]);
 
   const [ranges, setRanges] = useState(
     {
-      type: 'finiteToFinite',
-      ranges: [
-        { x: 1.0 }, //our start point
-        { name: 'Acidic', x: 6.5 },
-        { name: 'Neutral', x: 8.5 },
-        { name: 'Basic', x: 14.0 }, //14.0 would be end point
+      type: 'infiniteToInfinite',
+      ranges: [ //OPTIONAL: you can leave ranges undefined and it will display negative/positive
+        { name: 'acidic', x: 100 }, //[0, 100]
+        { name: 'neutral', x: 300 }, //(100, 300]
+        { name: 'basic' }, //(300, 500] //no x here!!!
       ]
     }
   );

@@ -293,9 +293,45 @@ const BulletGraph = (props) => {
 
     const drawTooltip = (ctx, point) => {
         let x = getWorldX(point.value);
-        let y = GRAPH_HEIGHT + GRAPH_Y;
+        let y = GRAPH_HEIGHT + GRAPH_Y + 2;
 
+        //possible things to draw: name, value, index
 
+        const tooltipPadding = 10;
+        //find max width
+        let toFindWidths = [];
+
+        //if just comment out one of these lines if we don't want it for sure across the graph
+        if (point.value !== undefined) toFindWidths.push(`value: ${point.value}`);
+        if (point.name !== undefined) toFindWidths.push(point.name);
+        if (point.index !== undefined) toFindWidths.push(point.index);
+        let maxWidth = Math.max(...toFindWidths.map(w => ctx.measureText(w).width)) + tooltipPadding * 2;
+
+        //adjust x if going past boundaries based on max width
+        if (x - maxWidth / 2 < BAR_PADDING) x = maxWidth / 2 + BAR_PADDING;
+        if (x + maxWidth / 2 > canvasRef.current.width - BAR_PADDING) x = canvasRef.current.width - BAR_PADDING - maxWidth / 2;
+
+        let height = 12; //no method to find calculated height
+        let totalHeight = height * toFindWidths.length + (2 * toFindWidths.length - 1);
+
+        ctx.fillStyle = 'black';
+        ctx.globalAlpha = 0.75;
+        ctx.fillRect(x - maxWidth / 2, y, maxWidth, totalHeight + tooltipPadding * 2);
+        ctx.globalAlpha = 1.0;
+
+        ctx.fillStyle = 'white';
+        ctx.font = '12px Rubik';
+        ctx.textAlign = 'center';
+
+        if (point.index !== undefined) {
+            ctx.fillText(`Index: ${point.index + 1}`, x, y + 10 + tooltipPadding);
+            y += 14;
+        }
+        if (point.name !== undefined) {
+            ctx.fillText(`Name: ${point.name}`, x, y + 10 + tooltipPadding);
+            y += 14;
+        }
+        ctx.fillText(`Value: ${point.value}`, x, y + 10 + tooltipPadding);
     };
 
     //https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-using-html-canvas
@@ -366,7 +402,7 @@ const BulletGraph = (props) => {
     const drawNumber = (ctx, count, xAxis, yAxis, isHovered) => {
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
-        ctx.font = 'serif';
+        ctx.font = '12px Rubik';
         const padding = isHovered ? 15 : 10;
         ctx.fillText(count, xAxis, yAxis - GRAPH_HEIGHT - padding);
     };
@@ -394,7 +430,6 @@ const BulletGraph = (props) => {
 
     //DRAW
     const draw = ctx => {
-        console.log('drawing');
         //clear the canvas on redraw
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         canvasRef.current.onmousemove = null;
