@@ -1,24 +1,21 @@
-import logo from './logo.svg';
 import './App.css';
 import BulletGraph from './BulletGraph';
 import { useState } from 'react';
 
 function App() {
   const [points, setPoints] = useState([
-    { name: 'bullet point 1', x: 5, unit: 'pH' },
-    { name: 'bullet point 2', x: 1, unit: 'pH' },
-    { name: 'bullet point 3', x: 10.5, unit: 'pH' }
+    //{ name: 'x', x: 0.2 }
   ]);
 
-  const [ranges, setRanges] = useState({
-    type: 'finiteToFinite',
-    ranges: [
-      { x: 0.0 },
-      { name: 'acidic', x: 6.5 },
-      { name: 'neutral', x: 8.5 },
-      { name: 'basic', x: 14.0 },
-    ]
-  });
+  const [ranges, setRanges] = useState(
+    {
+      type: 'percentage',
+      ranges: [
+        { name: 'ok', x: 0.3 },
+        { name: 'bad', x: 1.0 }
+      ]
+    }
+  );
 
   /* 
   'finiteToFinite': {
@@ -30,6 +27,43 @@ function App() {
       { name: 'basic', x: 14.0 }, //14.0 would be end point
     ]
   }
+
+  'zeroToInfinite': {
+    type: 'zeroToInfinite',
+    ranges: [
+      { name: 'acidic', x: 100 }, //[0, 100]
+      { name: 'neutral', x: 300 }, //(100, 300]
+      { name: 'basic' }, //(300, infinite] //no x here!!!
+    ]
+  }
+
+  'zeroToFinite': {
+    type: 'zeroToFinite',
+    ranges: [
+      { name: 'acidic', x: 100 }, //[0, 100]
+      { name: 'neutral', x: 300 }, //(100, 300]
+      { name: 'basic', x: 500 }, //(300, 500]
+    ]
+  }
+
+  'infiniteToInfinite': {
+    type: 'infiniteToInfinite',
+    ranges: [ //OPTIONAL: you can leave ranges undefined and it will display negative/positive
+      { name: 'acidic', x: 100 }, //[0, 100]
+      { name: 'neutral', x: 300 }, //(100, 300]
+      { name: 'basic'}, //(300, 500] //no x here!!!
+    ]
+  }
+
+  'percentage': {
+    type: 'percentage',
+    ranges: [ //OPTIONAL: we can leave labeled ranges as undefined and it will just be 0% to 100%
+      {name: 'ok', x: 0.20},
+      {name: 'hey', x: 0.50},
+      {name: 'no', x: 1} //if using labeled ranges, there at least needs to be one that goes up to 1
+    ]
+  }
+
   */
 
   const randomizePoints = () => {
@@ -39,7 +73,7 @@ function App() {
     for (let i = 0; i < numPoints; i++) {
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 13.0 + 1).toPrecision(2),
+        x: (Math.random()),
         unit: 'pH'
       });
     }
@@ -50,7 +84,7 @@ function App() {
   return (
     <div className="App">
       {/* the style on the div is just for a test on screen responsiveness */}
-      <div style={{ width: '80%', backgroundColor: 'gray' }}>
+      <div>
         <BulletGraph points={points} sensorRanges={ranges} />
       </div>
 
