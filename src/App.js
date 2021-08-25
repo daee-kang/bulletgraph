@@ -86,7 +86,7 @@ function App() {
   return (
     <div className="App">
       {/* the style on the div is just for a test on screen responsiveness */}
-      <div style={{ width: '90%', margin: '20px' }}>
+      <div>
         <BulletGraph
           points={points}
           sensorRanges={ranges}
