@@ -3,7 +3,16 @@ import './BulletGraph.css';
 
 const BulletGraph = (props) => {
     const canvasRef = useRef(null);
-    let { points, sensorRanges, colors, barWidth, precision } = props;
+
+    //props
+    let {
+        points, //OPTIONAL: our point data, every point should have a x value minumum so we can map it
+        sensorRanges, //OPTIONAL(DEPENDS): ranges for our data to be displayed, rules are written in app.js with examples
+        colors, //OPTIONAL: colors for the ranges, will only just cycle one by one
+        barWidth, //OPTIONAL: width of the big bar, default value is 20
+        fixed //OPTIONAL: sets precision to axis labels
+    } = props;
+
     let { ranges, type } = sensorRanges;
 
     //'consts' set in useeffect since it is dependent on our size
@@ -48,10 +57,7 @@ const BulletGraph = (props) => {
             ];
 
             //just draw the last label since our for loop in drawranges won't hit this last part
-            ctx.fillStyle = 'black';
-            ctx.textAlign = "end";
-            ctx.font = '12px Rubik';
-            ctx.fillText('100%', getWidthOfRange(0, 1), TEXT_Y);
+            drawAxisLabel(ctx, '100%', getWidthOfRange(0, 1), TEXT_Y);
         }
 
         drawRanges(ctx);
@@ -86,12 +92,9 @@ const BulletGraph = (props) => {
                 ctx.fillRect(0, GRAPH_Y, width, GRAPH_HEIGHT);
 
                 if (type !== 'infiniteToInfinite') {
-                    ctx.fillStyle = 'black';
-                    ctx.textAlign = "start";
-                    ctx.font = '12px Rubik';
                     let text = start;
                     if (type === 'percentage') text = "0%";
-                    ctx.fillText(text, 0, TEXT_Y);
+                    drawAxisLabel(ctx, text, 0, TEXT_Y);
                 }
 
                 drawLabel(ctx, ranges[i].name, start, ranges[i].x);
@@ -103,13 +106,9 @@ const BulletGraph = (props) => {
                 ctx.fillStyle = colors[getColorIdx()];
                 ctx.fillRect(prevWidth, GRAPH_Y, width, GRAPH_HEIGHT);
 
-                ctx.fillStyle = 'black';
-                ctx.textAlign = "center";
-                ctx.font = '12px Rubik';
                 let text = ranges[i - 1].x;
                 if (type === 'percentage') text = `${ranges[i - 1].x * 100}%`;
-                ctx.fillText(text, prevWidth, TEXT_Y);
-
+                drawAxisLabel(ctx, text, prevWidth, TEXT_Y);
                 drawLabel(ctx, ranges[i].name, ranges[i - 1].x, ranges[i].x);
 
                 prevWidth += width;
@@ -120,13 +119,10 @@ const BulletGraph = (props) => {
                 ) { continue; } //don't draw lastindicator
                 //last element
                 if (i === ranges.length - 1) {
-                    ctx.fillStyle = 'black';
-                    ctx.textAlign = "end";
-                    ctx.font = '12px Rubik';
-                    let x = ranges[i].x;
-                    if (x === undefined) x = getTotalRange();
-                    if (type === 'percentage') x = '100%';
-                    ctx.fillText(x, prevWidth, TEXT_Y);
+                    let label = ranges[i].x;
+                    if (label === undefined) label = getTotalRange();
+                    if (type === 'percentage') label = '100%';
+                    drawAxisLabel(ctx, label, prevWidth, TEXT_Y, 'end');
                 }
             }
         }
@@ -328,6 +324,21 @@ const BulletGraph = (props) => {
             }
         }
         ctx.closePath();
+    };
+
+    const drawAxisLabel = (ctx, text, x, y, align = "center") => {
+        if (type !== 'percentage') {
+            if (fixed) {
+                let num = parseInt(text);
+                if (num !== 0) {
+                    text = parseInt(text).toFixed(fixed);
+                }
+            }
+        }
+        ctx.fillStyle = 'black';
+        ctx.textAlign = align;
+        ctx.font = '12px Rubik';
+        ctx.fillText(text, x, y);
     };
 
     const drawLabel = (ctx, label, left, right) => {

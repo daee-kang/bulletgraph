@@ -91,7 +91,7 @@ function App() {
           points={points}
           sensorRanges={ranges}
           barWidth={25}
-          precision={1}
+          fixed={1}
         />
       </div>
 
