@@ -45,6 +45,15 @@ function App() {
     ]
   }
 
+  'infiniteToInfinite': {
+    type: 'infiniteToInfinite',
+    ranges: [ //you can leave ranges undefined and it will display negative/positive
+      { name: 'acidic', x: 100 }, //[0, 100]
+      { name: 'neutral', x: 300 }, //(100, 300]
+      { name: 'basic'}, //(300, 500]
+    ]
+  }
+
   */
 
   const randomizePoints = () => {
