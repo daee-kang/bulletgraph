@@ -152,7 +152,8 @@ const BulletGraph = (props) => {
                 if (ranges.length >= 2) {
                     let lastRange = ranges[ranges.length - 2].x; //x should be gauranteed to be here
                     //we should try to keep the graph even
-                    let potentialEnd = Math.floor(lastRange + (lastRange * 1 / ranges.length));
+                    let potentialEnd = lastRange + (lastRange * 1 / ranges.length);
+                    potentialEnd = potentialEnd >= 0 ? Math.ceil(potentialEnd) : Math.floor(potentialEnd);
                     if (potentialEnd > end) end = potentialEnd;
                 }
                 return end - start;
@@ -164,7 +165,7 @@ const BulletGraph = (props) => {
             }
             case 'infiniteToInfinite': {
                 const [start, end] = getLeftRightOfInfinites();
-                return Math.floor(end) - Math.floor(start);
+                return end - start;
             }
             case 'percentage': {
                 return 1;
@@ -177,9 +178,6 @@ const BulletGraph = (props) => {
 
     //used only for 'infiniteToInfinite'
     const getLeftRightOfInfinites = () => {
-        if (points.length === 0) {
-            return [-100, 100];
-        }
 
         //get everything in between
         let start = null;
@@ -190,6 +188,11 @@ const BulletGraph = (props) => {
                 end = range.x;
             }
         });
+
+        if (start === end) {
+            start = start - 1;
+            end = end + 1;
+        }
 
         //get smallest and biggest point
         let smallest = null;
@@ -218,10 +221,15 @@ const BulletGraph = (props) => {
             biggest :
             potentialRight;
 
+
         //we are just going to add padding no matter what to both sides
         let rangeBeforePadding = end - start;
         start = start - rangeBeforePadding * PADDING;
         end = end + rangeBeforePadding * PADDING;
+
+        //round values to integers
+        start = start >= 0 ? Math.ceil(start) : Math.floor(start);
+        end = end >= 0 ? Math.ceil(end) : Math.floor(end);
 
         return [start, end];
     };
@@ -258,7 +266,6 @@ const BulletGraph = (props) => {
             start = getLeftRightOfInfinites()[0];
         }
 
-        console.log(((x - start) / totalRange) * totalWidth);
         return ((x - start) / totalRange) * totalWidth + BAR_PADDING;
     };
 
