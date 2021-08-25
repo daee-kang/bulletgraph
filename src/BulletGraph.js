@@ -11,8 +11,6 @@ const BulletGraph = (props) => {
     let TEXT_Y = 0;
     const PADDING = 0.10; //padding is percentage of range and only used for infinite graphs
 
-
-
     /*
     ranges can be of different types
         zeroToInfinite = [{name: string, x: number}] //if last element, x should be nothing
@@ -22,22 +20,16 @@ const BulletGraph = (props) => {
         percentage = [{name: string, x: float}] //x should be 0.0 through 1.0, but total sum should equal 1.0
     */
 
-    //temp data for now
-    //NOTE: range input data not enough for ranges, we need a start, not just the end
-    //passing in points as props for now just to test state update
-
-    colors = [
-        '#2a9d8f',
-        '#e9c46a',
-        '#e76f51',
-        '#2a9d8f',
-        '#e9c46a',
-        '#e76f51',
-        '#2a9d8f',
-        '#e9c46a',
-        '#e76f51',
-    ];
-
+    //default colors if colors prop not passed
+    //colors basically just cycle through one by one
+    if (colors === undefined) {
+        colors = [
+            '#3494b4',
+            '#ee5876',
+            '#eec832',
+            '#2a9d8f',
+        ];
+    }
 
     //HELPER FUNCTIONS
     //this func is for drawing when no ranges are included, we'll just create based on the type
@@ -65,6 +57,12 @@ const BulletGraph = (props) => {
     };
 
     const drawRanges = (ctx) => {
+        let colorIdx = 0;
+
+        const getColorIdx = () => { //small helper, this loop doesn't necessaraily go i = 0 -> n
+            return (colorIdx++ % colors.length);
+        };
+
         let start = 0;
 
         if (type === 'finiteToFinite') {
@@ -83,7 +81,7 @@ const BulletGraph = (props) => {
                 //get width 
                 let width = getWidthOfRange(start, ranges[i].x);
 
-                ctx.fillStyle = colors[i];
+                ctx.fillStyle = colors[getColorIdx()];
                 ctx.fillRect(0, GRAPH_Y, width, GRAPH_HEIGHT);
 
                 if (type !== 'infiniteToInfinite') {
@@ -101,7 +99,7 @@ const BulletGraph = (props) => {
                 //end
                 let width = getWidthOfRange(ranges[i - 1].x, ranges[i].x);
 
-                ctx.fillStyle = colors[i];
+                ctx.fillStyle = colors[getColorIdx()];
                 ctx.fillRect(prevWidth, GRAPH_Y, width, GRAPH_HEIGHT);
 
                 ctx.fillStyle = 'black';
@@ -281,7 +279,6 @@ const BulletGraph = (props) => {
         //reset
         ctx.lineWidth = 1;
     };
-
     //https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-using-html-canvas
     const drawPolygon = (ctx, pts, radius) => {
         const getRoundedPoints = (pts, radius) => {
