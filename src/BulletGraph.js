@@ -2,15 +2,16 @@ import React, { useEffect, useRef } from 'react';
 
 const BulletGraph = (props) => {
     const canvasRef = useRef(null);
+    let { points, sensorRanges, colors, barWidth } = props;
+    let { ranges, type } = sensorRanges;
 
     //'consts' set in useeffect since it is dependent on our size
-    let GRAPH_HEIGHT = 0;
+    let GRAPH_HEIGHT = barWidth || 20;
     let GRAPH_Y = 0;
     let TEXT_Y = 0;
     const PADDING = 0.10; //padding is percentage of range and only used for infinite graphs
 
-    let { points, sensorRanges, colors } = props;
-    let { ranges, type } = sensorRanges;
+
 
     /*
     ranges can be of different types
@@ -269,8 +270,8 @@ const BulletGraph = (props) => {
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(startx, starty);
-        ctx.lineTo(startx + 15, starty - 20);
-        ctx.lineTo(startx - 15, starty - 20);
+        ctx.lineTo(startx + GRAPH_HEIGHT * 0.75, starty - GRAPH_HEIGHT);
+        ctx.lineTo(startx - GRAPH_HEIGHT * 0.75, starty - GRAPH_HEIGHT);
         ctx.lineTo(startx, starty);
         ctx.fill();
         ctx.stroke();
@@ -351,7 +352,7 @@ const BulletGraph = (props) => {
 
         draw(context);
         return () => window.removeEventListener('resize', updateSize);
-    }, [points]);
+    }, [points, props]);
 
     return <canvas
         ref={canvasRef}

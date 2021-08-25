@@ -85,7 +85,11 @@ function App() {
     <div className="App">
       {/* the style on the div is just for a test on screen responsiveness */}
       <div>
-        <BulletGraph points={points} sensorRanges={ranges} />
+        <BulletGraph
+          points={points}
+          sensorRanges={ranges}
+          barWidth={25}
+        />
       </div>
 
       <button onClick={randomizePoints}> randomize points</button>
