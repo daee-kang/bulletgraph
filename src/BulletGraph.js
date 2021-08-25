@@ -9,16 +9,18 @@ const BulletGraph = (props) => {
         points, //OPTIONAL: our point data, every point should have a x value minumum so we can map it
         sensorRanges, //OPTIONAL(DEPENDS): ranges for our data to be displayed, rules are written in app.js with examples
         colors, //OPTIONAL: colors for the ranges, will only just cycle one by one
-        barWidth, //OPTIONAL: width of the big bar, default value is 20
-        fixed //OPTIONAL: sets precision to axis labels
+        barWidth = 20, //OPTIONAL: width of the big bar, default value is 20
+        fixed, //OPTIONAL: sets precision to axis labels
+        barPadding = 20, //OPTIONAL: sets padding on the left and right of bar, this is useful so points can be displayed if cut off, default is 20
     } = props;
 
     let { ranges, type } = sensorRanges;
 
     //'consts' set in useeffect since it is dependent on our size
-    let GRAPH_HEIGHT = barWidth || 20;
-    let GRAPH_Y = 0;
-    let TEXT_Y = 0;
+    const GRAPH_HEIGHT = barWidth;
+    let GRAPH_Y = 0; //this const is set in useEffect
+    let TEXT_Y = 0; //this const is set in useEffect
+    const BAR_PADDING = barPadding;
     const PADDING = 0.10; //padding is percentage of range and only used for infinite graphs
 
     /*
@@ -79,7 +81,7 @@ const BulletGraph = (props) => {
             start = getLeftRightOfInfinites()[0];
         }
 
-        let prevWidth = 0;
+        let prevWidth = BAR_PADDING;
         for (let i = 0; i < ranges.length; i++) {
             if (i === 0 && type === 'finiteToFinite') continue;
 
@@ -89,12 +91,12 @@ const BulletGraph = (props) => {
                 let width = getWidthOfRange(start, ranges[i].x);
 
                 ctx.fillStyle = colors[getColorIdx()];
-                ctx.fillRect(0, GRAPH_Y, width, GRAPH_HEIGHT);
+                ctx.fillRect(prevWidth, GRAPH_Y, width, GRAPH_HEIGHT);
 
                 if (type !== 'infiniteToInfinite') {
                     let text = start;
                     if (type === 'percentage') text = "0%";
-                    drawAxisLabel(ctx, text, 0, TEXT_Y);
+                    drawAxisLabel(ctx, text, BAR_PADDING, TEXT_Y, 'start');
                 }
 
                 drawLabel(ctx, ranges[i].name, start, ranges[i].x);
@@ -227,7 +229,7 @@ const BulletGraph = (props) => {
     const getWidthOfRange = (start, end) => {
         let canvas = canvasRef.current;
 
-        let totalWidth = canvas.width;
+        let totalWidth = canvas.width - BAR_PADDING * 2;
         let totalRange = getTotalRange();
 
         if (end === undefined && type === 'zeroToInfinite') {
@@ -245,7 +247,7 @@ const BulletGraph = (props) => {
 
     const getWorldX = (x) => {
         const totalRange = getTotalRange();
-        const totalWidth = canvasRef.current.width;
+        const totalWidth = canvasRef.current.width - BAR_PADDING * 2;
 
         let start = 0;
 
@@ -256,7 +258,8 @@ const BulletGraph = (props) => {
             start = getLeftRightOfInfinites()[0];
         }
 
-        return ((x - start) / totalRange) * totalWidth;
+        console.log(((x - start) / totalRange) * totalWidth);
+        return ((x - start) / totalRange) * totalWidth + BAR_PADDING;
     };
 
     const drawPoint = (ctx, startx, starty) => {
@@ -329,9 +332,9 @@ const BulletGraph = (props) => {
     const drawAxisLabel = (ctx, text, x, y, align = "center") => {
         if (type !== 'percentage') {
             if (fixed) {
-                let num = parseInt(text);
+                let num = parseFloat(text);
                 if (num !== 0) {
-                    text = parseInt(text).toFixed(fixed);
+                    text = parseFloat(text).toFixed(fixed);
                 }
             }
         }
@@ -344,9 +347,9 @@ const BulletGraph = (props) => {
     const drawNumber = (ctx, index) => {
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
-        ctx.font = 'serif'
-        ctx.fillText(index)
-    }
+        ctx.font = 'serif';
+        ctx.fillText(index);
+    };
 
     const drawLabel = (ctx, label, left, right) => {
         if (right === undefined) {
