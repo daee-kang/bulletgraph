@@ -260,9 +260,9 @@ const BulletGraph = (props) => {
     };
 
     const drawPoint = (ctx, startx, starty) => {
-        ctx.fillStyle = "#F5F5F5";
-        ctx.strokeStyle = "#585858";
-        ctx.lineWidth = 3;
+        ctx.fillStyle = "white";
+        ctx.strokeStyle = "grey";
+        ctx.lineWidth = 1.5;
         const borderRadius = 10;
         let points = [
             [startx, starty + 4],
@@ -340,6 +340,13 @@ const BulletGraph = (props) => {
         ctx.font = '12px Rubik';
         ctx.fillText(text, x, y);
     };
+
+    const drawNumber = (ctx, index) => {
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        ctx.font = 'serif'
+        ctx.fillText(index)
+    }
 
     const drawLabel = (ctx, label, left, right) => {
         if (right === undefined) {
