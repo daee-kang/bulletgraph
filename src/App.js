@@ -15,14 +15,14 @@ function App() {
     {
       type: 'infiniteToInfinite',
       ranges: [ //OPTIONAL: you can leave ranges undefined and it will display negative/positive
-        { name: 'acidic', x: 100 }, //[0, 100]
-        { name: 'neutral', x: 300 }, //(100, 300]
-        { name: 'basic' }, //(300, 500] //no x here!!!
+        { name: 'Acidic', x: 100 }, //[0, 100]
+        { name: 'Neutral', x: 300 }, //(100, 300]
+        { name: 'Basic' }, //(300, 500] //no x here!!!
       ]
     }
   );
 
-  const [unit, SetUnit] = useState("pH")
+  const [unit, SetUnit] = useState("pH");
 
   /* 
   'finiteToFinite': {
@@ -82,7 +82,7 @@ function App() {
       currentDateTime = new Date().toLocaleString().replace(",","").replace(/:.. /," ")
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 13 + 1), 
+        x: (Math.random() * 600), 
         createdAt: currentDateTime,
       });
     }
@@ -93,15 +93,13 @@ function App() {
     <div className="App">
       {console.log("points", points)}
       {/* the style on the div is just for a test on screen responsiveness */}
-      <div>
-        <BulletGraph
-          points={points}
-          sensorRanges={ranges}
-          unit={unit}
-          barWidth={25}
-          fixed={1}
-        />
-      </div>
+      <BulletGraph
+        points={points}
+        sensorRanges={ranges}
+        unit={unit}
+        barWidth={25}
+        fixed={1}
+      />
 
 
       <button onClick={randomizePoints}> randomize points</button>
