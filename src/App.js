@@ -3,11 +3,13 @@ import BulletGraph from './BulletGraph';
 import { useState } from 'react';
 
 function App() {
-  const [points, setPoints] = useState([
-    { name: 'yo', x: 1.043209570392157231 },
-    { name: 'this', x: 13.843209570392157231 },
-    { name: 'works', x: 900 }
-  ]);
+  const [points, setPoints] = useState([]
+    // [
+    //   { name: 'yo', x: 1.043209570392157231 },
+    //   { name: 'this', x: 13.843209570392157231 },
+    //   { name: 'works', x: 900 }
+    // ]
+  );
 
   const [ranges, setRanges] = useState(
     {
@@ -74,19 +76,22 @@ function App() {
   const randomizePoints = () => {
     let numPoints = Math.floor(Math.random() * 6);
     let points = [];
+    let currentDateTime;
 
     for (let i = 0; i < numPoints; i++) {
+      currentDateTime = new Date().toLocaleString().replace(",","").replace(/:.. /," ")
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 600)
+        x: (Math.random() * 600), 
+        createdAt: currentDateTime,
       });
     }
-
     setPoints(points);
   };
 
   return (
     <div className="App">
+      {console.log("points", points)}
       {/* the style on the div is just for a test on screen responsiveness */}
       <BulletGraph
         points={points}
@@ -99,7 +104,7 @@ function App() {
 
 
       <button onClick={randomizePoints}> randomize points</button>
-      {points.map(point => <div>{point.name} : {point.x}</div>)}
+      {points.map((point, index) => <div key={index}>{point.name} : {point.x}</div>)}
     </div>
   );
 }
