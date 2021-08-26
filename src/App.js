@@ -11,11 +11,11 @@ function App() {
 
   const [ranges, setRanges] = useState(
     {
-      type: 'infiniteToInfinite',
-      ranges: [ //OPTIONAL: you can leave ranges undefined and it will display negative/positive
-        { name: 'Acidic', x: 100 }, //[0, 100]
-        { name: 'Neutral', x: 300 }, //(100, 300]
-        { name: 'Basic' }, //(300, 500] //no x here!!!
+      type: 'zeroToFinite',
+      ranges: [
+        { name: 'acidic', x: 100 }, //[0, 100]
+        { name: 'neutral', x: 300 }, //(100, 300]
+        { name: 'basic', x: 500 }, //(300, 500]
       ]
     }
   );
@@ -94,6 +94,7 @@ function App() {
         unit={unit}
         barWidth={25}
         fixed={1}
+        fileDownloadName={"test"}
       />
 
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Canvas2Svg from 'canvas2svg';
 import './BulletGraph.css';
 
 const BulletGraph = (props) => {
@@ -13,6 +14,8 @@ const BulletGraph = (props) => {
         fixed, //OPTIONAL: sets precision to axis labels
         barPadding = 20, //OPTIONAL: sets padding on the left and right of bar, this is useful so points can be displayed if cut off, default is 20
         unit,
+        background, //OPTIONAL: sets a background color, transparent if undefined
+        fileDownloadName = "bulletgraph", //OPTIONAL: sets file name for download, default is "bulletgraph"
     } = props;
 
     let { ranges, type } = sensorRanges;
@@ -291,10 +294,11 @@ const BulletGraph = (props) => {
             [startx - GRAPH_HEIGHT * 0.75 * scale, starty - GRAPH_HEIGHT * scale]
         ];
         let point = new Path2D();
-        drawPolygon(point, points, borderRadius);
+        drawPolygon(point, points, borderRadius, true);
+        drawPolygon(ctx, points, borderRadius);
 
-        ctx.fill(point);
-        ctx.stroke(point);
+        ctx.fill();
+        ctx.stroke();
 
         return point;
     };
@@ -343,7 +347,7 @@ const BulletGraph = (props) => {
     };
 
     //https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-using-html-canvas
-    const drawPolygon = (ctx, pts, radius) => {
+    const drawPolygon = (ctx, pts, radius, notSvg) => {
         const getRoundedPoints = (pts, radius) => {
             var i1, i2, i3, p1, p2, p3, prevPt, nextPt,
                 len = pts.length,
@@ -377,7 +381,7 @@ const BulletGraph = (props) => {
             pts = getRoundedPoints(pts, radius);
         }
         var i, pt, len = pts.length;
-        //ctx.beginPath();
+        if (!notSvg) ctx.beginPath();
         for (i = 0; i < len; i++) {
             pt = pts[i];
             if (i === 0) {
@@ -455,9 +459,14 @@ const BulletGraph = (props) => {
     };
 
     //DRAW
-    const draw = ctx => {
+    const draw = (ctx, svg = false) => {
         //clear the canvas on redraw
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+        if (background) {
+            ctx.fillStyle = background;
+            ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
         canvasRef.current.onmousemove = null;
 
         //DRAW THE RANGES or RANGE
@@ -485,33 +494,35 @@ const BulletGraph = (props) => {
         //we reverse the array so we priority is given to the later points when hovering
         drawnPoints.reverse();
 
-        canvasRef.current.onmousemove = function (e) {
-            let x = e.clientX;
-            let y = e.clientY;
+        if (!svg) {
+            canvasRef.current.onmousemove = function (e) {
+                let x = e.clientX;
+                let y = e.clientY;
 
-            for (let point of drawnPoints) {
-                if (ctx.isPointInPath(point.path, x, y)) {
-                    if (hoveredPoint !== point.index) {
-                        hoveredPoint = point.index;
-                        //draw to remove previous hovered point in case there was one
-                        draw(ctx);
-                        //draw our hovered point, this is a cheap trick, just draw on top of all the other points
-                        drawPoint(ctx, getWorldX(point.value), GRAPH_HEIGHT + GRAPH_Y, true);
+                for (let point of drawnPoints) {
+                    if (ctx.isPointInPath(point.path, x, y)) {
+                        if (hoveredPoint !== point.index) {
+                            hoveredPoint = point.index;
+                            //draw to remove previous hovered point in case there was one
+                            draw(ctx);
+                            //draw our hovered point, this is a cheap trick, just draw on top of all the other points
+                            drawPoint(ctx, getWorldX(point.value), GRAPH_HEIGHT + GRAPH_Y, true);
 
-                        drawTooltip(ctx, point);
+                            drawTooltip(ctx, point);
+                        }
+                        return;
                     }
-                    return;
                 }
-            }
 
-            if (hoveredPoint !== null) {
-                hoveredPoint = null;
-                //draw to reset drawn hovered point
-                draw(ctx);
-            }
+                if (hoveredPoint !== null) {
+                    hoveredPoint = null;
+                    //draw to reset drawn hovered point
+                    draw(ctx);
+                }
 
-            if (zoom !== 1) panEventHandler(e);
-        };
+                if (zoom !== 1) panEventHandler(e);
+            };
+        }
     };
 
     //we need to keep this event handler seperate so we can add it ontop of our mouse hover
@@ -580,6 +591,54 @@ const BulletGraph = (props) => {
         return () => window.removeEventListener('resize', updateSize);
     }, [points, props]);
 
+    const exportSvg = () => {
+        let ctx = new Canvas2Svg(canvasRef.current.width, canvasRef.current.height);
+        draw(ctx, true);
+        let serialized = ctx.getSerializedSvg();
+
+        let dataURL = 'data:image/svg+xml,' + encodeURIComponent(serialized);
+
+        let xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        xhr.onload = function () {
+            let a = document.createElement('a');
+            a.href = window.URL.createObjectURL(xhr.response);
+            a.download = `${fileDownloadName}.svg`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        };
+        xhr.open('GET', dataURL); // This is to download the svg Image
+        xhr.send();
+    };
+
+    const exportImage = () => {
+        //insert white backdrop if no background color defined
+        if (background === undefined) {
+            let ctx = canvasRef.current.getContext('2d');
+            let prev = background;
+            background = 'white';
+            draw(ctx);
+            background = prev;
+        }
+        let canvasImage = canvasRef.current.toDataURL('image/jpeg');
+
+        let xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        xhr.onload = function () {
+            let a = document.createElement('a');
+            a.href = window.URL.createObjectURL(xhr.response);
+            a.download = `${fileDownloadName}.png`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        };
+        xhr.open('GET', canvasImage); // This is to download the canvas Image
+        xhr.send();
+    };
+
     return <div style={{ height: '200px' }}>
         <canvas
             className="bullet-graph"
@@ -595,6 +654,8 @@ const BulletGraph = (props) => {
                 top: '20px'
             }}
         >
+            <button onClick={exportImage}>image</button>
+            <button onClick={exportSvg}>svg</button>
             <button className="zoom" onClick={zoomIn}>+</button>
             <button className="zoom" onClick={zoomOut}>-</button>
         </span>
