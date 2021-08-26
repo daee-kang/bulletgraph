@@ -91,7 +91,6 @@ function App() {
 
   return (
     <div className="App">
-      {console.log("points", points)}
       {/* the style on the div is just for a test on screen responsiveness */}
       <BulletGraph
         points={points}
