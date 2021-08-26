@@ -470,16 +470,16 @@ const BulletGraph = (props) => {
             ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         }
         canvasRef.current.onmousemove = null;
-        
+
         //DRAW THE RANGES or RANGE
         if (ranges === undefined || ranges.length <= 1) { //should we even customize ranges if theres only one
             drawRange(ctx);
         } else {
             drawRanges(ctx);
         }
-        
+
         let drawnPoints = [];
-        
+
         //DRAW THE POINTS
         for (let i = 0; i < points.length; i++) {
             let point = drawPoint(ctx, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y);
@@ -493,38 +493,39 @@ const BulletGraph = (props) => {
             //draw labels eventually
             drawNumber(ctx, i + 1, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y, hoveredPoint === i);
         }
-        
+
         //we reverse the array so we priority is given to the later points when hovering
         drawnPoints.reverse();
 
         if (!svg) {
             canvasRef.current.onmousemove = function (e) {
-              let x = e.clientX;
-              let y = e.clientY;
+                let x = e.clientX;
+                let y = e.clientY;
 
-              for (let point of drawnPoints) {
-                  console.log("asdf", point.createdAt)
-                  if (ctx.isPointInPath(point.path, x, y)) {
-                      if (hoveredPoint !== point.index) {
-                          hoveredPoint = point.index;
-                          //draw to remove previous hovered point in case there was one
-                          draw(ctx);
-                          //draw our hovered point, this is a cheap trick, just draw on top of all the other points
-                          drawPoint(ctx, getWorldX(point.value), GRAPH_HEIGHT + GRAPH_Y, true);
+                for (let point of drawnPoints) {
+                    console.log("asdf", point.createdAt);
+                    if (ctx.isPointInPath(point.path, x, y)) {
+                        if (hoveredPoint !== point.index) {
+                            hoveredPoint = point.index;
+                            //draw to remove previous hovered point in case there was one
+                            draw(ctx);
+                            //draw our hovered point, this is a cheap trick, just draw on top of all the other points
+                            drawPoint(ctx, getWorldX(point.value), GRAPH_HEIGHT + GRAPH_Y, true);
 
-                          drawTooltip(ctx, point);
-                      }
-                  }
+                            drawTooltip(ctx, point);
+                        }
+                        return;
+                    }
 
-                  if (hoveredPoint !== null) {
-                      hoveredPoint = null;
-                      //draw to reset drawn hovered point
-                      draw(ctx);
-                  }
+                    if (hoveredPoint !== null) {
+                        hoveredPoint = null;
+                        //draw to reset drawn hovered point
+                        draw(ctx);
+                    }
 
-                  if (zoom !== 1) panEventHandler(e);
-              };
-            }
+                    if (zoom !== 1) panEventHandler(e);
+                };
+            };
         }
     };
 

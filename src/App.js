@@ -79,10 +79,10 @@ function App() {
     let currentDateTime;
 
     for (let i = 0; i < numPoints; i++) {
-      currentDateTime = new Date().toLocaleString().replace(",","").replace(/:.. /," ")
+      currentDateTime = new Date().toLocaleString().replace(",", "").replace(/:.. /, " ");
       points.push({
         name: `bulet point ${i + 1}`,
-        x: (Math.random() * 600), 
+        x: (Math.random() * 600),
         createdAt: currentDateTime,
       });
     }
