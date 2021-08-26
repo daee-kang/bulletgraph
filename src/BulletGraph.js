@@ -24,7 +24,7 @@ const BulletGraph = (props) => {
     const BAR_PADDING = barPadding;
     const PADDING = 0.10; //padding is percentage of range and only used for infinite graphs
 
-    const [zoom, setZoom] = useState(1);
+    let zoom = 1;
     let panX = 0;
     let netPanning = 0;
     let panning = false;
@@ -92,7 +92,6 @@ const BulletGraph = (props) => {
         let prevWidth = BAR_PADDING;
         prevWidth += netPanning;
 
-        console.log(prevWidth);
         for (let i = 0; i < ranges.length; i++) {
             if (i === 0 && type === 'finiteToFinite') continue;
 
@@ -438,12 +437,21 @@ const BulletGraph = (props) => {
     };
 
     const zoomIn = () => {
-        setZoom(zoom + 1);
+        zoom += 0.5;
+        netPanning += netPanning / zoom;
+        if (netPanning < -canvasRef.current.width * zoom + canvasRef.current.width) netPanning = -canvasRef.current.width * zoom + canvasRef.current.width;
+        draw(canvasRef.current.getContext('2d'));
     };
 
     const zoomOut = () => {
-        if (zoom - 1 < 1) return;
-        setZoom(zoom - 1);
+        zoom -= 0.5;
+        if (zoom < 1) {
+            netPanning = 0;
+            zoom = 1;
+        } else {
+            netPanning -= netPanning / zoom;
+        }
+        draw(canvasRef.current.getContext('2d'));
     };
 
     //DRAW
@@ -478,8 +486,6 @@ const BulletGraph = (props) => {
         drawnPoints.reverse();
 
         canvasRef.current.onmousemove = function (e) {
-            if (zoom !== 1) panEventHandler(e);
-
             let x = e.clientX;
             let y = e.clientY;
 
@@ -503,11 +509,14 @@ const BulletGraph = (props) => {
                 //draw to reset drawn hovered point
                 draw(ctx);
             }
+
+            if (zoom !== 1) panEventHandler(e);
         };
     };
 
     //we need to keep this event handler seperate so we can add it ontop of our mouse hover
     const panEventHandler = (e) => {
+        //https://stackoverflow.com/questions/33925012/how-to-pan-the-canvas
         if (!panning) return;
 
         let mouseX = parseInt(e.clientX);
@@ -515,7 +524,10 @@ const BulletGraph = (props) => {
         panX = mouseX;
 
         netPanning += dx;
-        console.log('netchange in panning is', netPanning + dx);
+        if (netPanning > 0) {
+            netPanning = 0;
+        }
+        if (netPanning < -canvasRef.current.width * zoom + canvasRef.current.width) netPanning = -canvasRef.current.width * zoom + canvasRef.current.width;
         draw(canvasRef.current.getContext('2d'));
     };
 
@@ -545,31 +557,28 @@ const BulletGraph = (props) => {
             draw(context);
         };
         window.addEventListener('resize', updateSize);
+
+        canvas.onmousedown = function (e) {
+            panning = true;
+
+            panX = e.clientX;
+        };
+
+        canvas.onmouseup = function (e) {
+            panning = false;
+        };
+
+        canvas.onmouseout = function (e) {
+            panning = false;
+        };
+
+        canvas.onmousemove = function (e) {
+            panEventHandler(e);
+        };
+
         draw(context);
-        if (zoom !== 1) {
-            canvas.onmousedown = function (e) {
-                panning = true;
-
-                panX = e.clientX;
-                console.log(e.clientX);
-            };
-
-            canvas.onmouseup = function (e) {
-                panning = false;
-            };
-
-            canvas.onmouseout = function (e) {
-                panning = false;
-            };
-
-            canvas.onmousemove = function (e) {
-                panEventHandler(e);
-            };
-        } else {
-            netPanning = 0;
-        }
         return () => window.removeEventListener('resize', updateSize);
-    }, [points, zoom, props]);
+    }, [points, props]);
 
     return <div style={{ height: '200px' }}>
         <canvas
@@ -577,7 +586,6 @@ const BulletGraph = (props) => {
             ref={canvasRef}
             {...props}
             style={{
-                cursor: `${zoom !== 1 ? 'grab' : 'default'}`
             }}
         />
         <span
