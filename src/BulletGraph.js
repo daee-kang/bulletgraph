@@ -413,7 +413,7 @@ const BulletGraph = (props) => {
     };
 
     const drawNumber = (ctx, count, xAxis, yAxis, isHovered) => {
-        // create 
+        // draw the number on top of the triangle data point
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
         ctx.font = '12px Rubik';
