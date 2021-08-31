@@ -499,11 +499,11 @@ const BulletGraph = (props) => {
 
         if (!svg) {
             canvasRef.current.onmousemove = function (e) {
-                let x = e.clientX;
-                let y = e.clientY;
+                const rect = canvasRef.current.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                let y = e.clientY - rect.top;
 
                 for (let point of drawnPoints) {
-                    console.log("asdf", point.createdAt);
                     if (ctx.isPointInPath(point.path, x, y)) {
                         if (hoveredPoint !== point.index) {
                             hoveredPoint = point.index;
