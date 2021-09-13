@@ -34,6 +34,9 @@ const BulletGraph = (props) => {
 
     let hoveredPoint = null;
 
+    let width = 0;
+    let height = 0;
+
     /*
     ranges can be of different types
         zeroToInfinite = [{name: string, x: number}] //if last element, x should be nothing
@@ -248,9 +251,7 @@ const BulletGraph = (props) => {
     };
 
     const getWidthOfRange = (start, end) => {
-        let canvas = canvasRef.current;
-
-        let totalWidth = canvas.width * zoom - BAR_PADDING * 2;
+        let totalWidth = width * zoom - BAR_PADDING * 2;
         let totalRange = getTotalRange();
 
         if (end === undefined && type === 'zeroToInfinite') {
@@ -268,7 +269,7 @@ const BulletGraph = (props) => {
 
     const getWorldX = (x) => {
         const totalRange = getTotalRange();
-        const totalWidth = canvasRef.current.width * zoom - BAR_PADDING * 2;
+        const totalWidth = width * zoom - BAR_PADDING * 2;
 
         let start = 0;
 
@@ -321,7 +322,7 @@ const BulletGraph = (props) => {
 
         //adjust x if going past boundaries based on max width
         if (x - maxWidth / 2 < BAR_PADDING) x = maxWidth / 2 + BAR_PADDING;
-        if (x + maxWidth / 2 > canvasRef.current.width - BAR_PADDING) x = canvasRef.current.width - BAR_PADDING - maxWidth / 2;
+        if (x + maxWidth / 2 > width - BAR_PADDING) x = width - BAR_PADDING - maxWidth / 2;
 
         let height = 12; //no method to find calculated height
         let totalHeight = height * toFindWidths.length + (2 * toFindWidths.length - 1);
@@ -445,7 +446,7 @@ const BulletGraph = (props) => {
     const zoomIn = () => {
         zoom += 0.5;
         netPanning += netPanning / zoom;
-        if (netPanning < -canvasRef.current.width * zoom + canvasRef.current.width) netPanning = -canvasRef.current.width * zoom + canvasRef.current.width;
+        if (netPanning < -width * zoom + width) netPanning = -width * zoom + width;
         draw(canvasRef.current.getContext('2d'));
     };
 
@@ -463,11 +464,11 @@ const BulletGraph = (props) => {
     //DRAW
     const draw = (ctx, svg = false) => {
         //clear the canvas on redraw
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        ctx.clearRect(0, 0, width, height);
 
         if (background) {
             ctx.fillStyle = background;
-            ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+            ctx.fillRect(0, 0, width, height);
         }
         canvasRef.current.onmousemove = null;
 
@@ -480,6 +481,7 @@ const BulletGraph = (props) => {
 
         let drawnPoints = [];
 
+        console.log('drawing points');
         //DRAW THE POINTS
         for (let i = 0; i < points.length; i++) {
             let point = drawPoint(ctx, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y);
@@ -500,8 +502,9 @@ const BulletGraph = (props) => {
         if (!svg) {
             canvasRef.current.onmousemove = function (e) {
                 const rect = canvasRef.current.getBoundingClientRect();
-                let x = e.clientX - rect.left;
-                let y = e.clientY - rect.top;
+                let dpi = window.devicePixelRatio;
+                let x = (e.clientX - rect.left) * dpi;
+                let y = (e.clientY - rect.top) * dpi;
 
                 for (let point of drawnPoints) {
                     if (ctx.isPointInPath(point.path, x, y)) {
@@ -542,29 +545,37 @@ const BulletGraph = (props) => {
         if (netPanning > 0) {
             netPanning = 0;
         }
-        if (netPanning < -canvasRef.current.width * zoom + canvasRef.current.width) netPanning = -canvasRef.current.width * zoom + canvasRef.current.width;
+        if (netPanning < -width * zoom + width) netPanning = -width * zoom + width;
         draw(canvasRef.current.getContext('2d'));
     };
 
     useEffect(() => {
         const canvas = canvasRef.current;
 
+        let dpi = window.devicePixelRatio || 1;
         canvas.style.width = "100%";
         canvas.style.height = "100%";
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
+        width = canvas.offsetWidth;
+        height = canvas.offsetHeight;
+        canvas.width = width * dpi;
+        canvas.height = height * dpi;
+        const context = canvas.getContext('2d');
+        context.scale(dpi, dpi);
 
         //set our 'consts'
         //ignore warning here, this is set on each render anyway
-        GRAPH_Y = canvas.height / 2 - GRAPH_HEIGHT / 2;
+        GRAPH_Y = height / 2 - GRAPH_HEIGHT / 2;
         TEXT_Y = GRAPH_Y + GRAPH_HEIGHT + 20; //20 is padding
 
-        const context = canvas.getContext('2d');
         const updateSize = (e) => {
+            let dpi = window.devicePixelRatio || 1;
             canvas.style.width = "100%";
             canvas.style.height = "100%";
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            width = canvas.offsetWidth;
+            height = canvas.offsetHeight;
+            canvas.width = canvas.offsetWidth * dpi;
+            canvas.height = canvas.offsetHeight * dpi;
+            context.scale(dpi, dpi);
 
             //clear the canvas on redraw
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -596,7 +607,7 @@ const BulletGraph = (props) => {
     }, [points, props]);
 
     const exportSvg = () => {
-        let ctx = new Canvas2Svg(canvasRef.current.width, canvasRef.current.height);
+        let ctx = new Canvas2Svg(width, height);
         draw(ctx, true);
         let serialized = ctx.getSerializedSvg();
 
