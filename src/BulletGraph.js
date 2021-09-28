@@ -110,7 +110,7 @@ const BulletGraph = ({
 
                 let text = start;
                 if (type === 'percentage') text = "0%";
-                drawAxisLabel(ctx, text, BAR_PADDING, TEXT_Y, 'start');
+                drawAxisLabel(ctx, text, BAR_PADDING + netPanning, TEXT_Y, 'start');
                 
                 drawLabel(ctx, ranges[i].name, start, ranges[i].x);
                 prevWidth += width;
@@ -139,49 +139,6 @@ const BulletGraph = ({
         }
 
     };
-    
-    const getMinMax = () => {
-        // get the min and the max value
-        switch (type) {
-            case 'finiteToFinite': {
-                startPoint = ranges[0].x;
-                endPoint = ranges[ranges.length - 1].x;
-                return [startPoint, endPoint];
-            }
-            case 'zeroToInfinite': {
-    
-                startPoint = 0;
-                let maxValue = 0;
-                points.forEach(point => {
-                    if (point.x > maxValue) maxValue = parseFloat(point.x);
-                });
-                //basically our biggest point + 10% padding
-                endPoint  = maxValue + maxValue * PADDING;
-    
-                //if our biggest point is less than our ranges, don't use it, make sure all our ranges show
-                if (ranges.length >= 2) {
-                    let lastRange = ranges[ranges.length - 2].x; //x should be gauranteed to be here
-                    //we should try to keep the graph even
-                    let potentialEnd = lastRange + (lastRange * 1 / ranges.length);
-                    potentialEnd = potentialEnd >= 0 ? Math.ceil(potentialEnd) : Math.floor(potentialEnd);
-                    if (potentialEnd > endPoint) endPoint = potentialEnd;
-                }
-                return [startPoint, endPoint];
-            }
-            case 'zeroToFinite': {
-                startPoint = 0;
-                endPoint = ranges[ranges.length - 1].x;
-                return [startPoint, endPoint];
-            }
-            case 'infiniteToInfinite': {
-                return [startPoint, endPoint] = getLeftRightOfInfinites();
-            }
-            case 'percentage': {
-                return [0, 1];
-            }
-            default: break;
-        }
-    }
 
     const getTotalRange = () => {
         switch (type) {
@@ -299,8 +256,6 @@ const BulletGraph = ({
         }
 
         let d = end - start;
-        startPoint = start
-        endPoint = end
         let p = d / totalRange;
 
         return totalWidth * p;
@@ -402,7 +357,7 @@ const BulletGraph = ({
                 if (i1 < 0) {
                     i1 = len - 1;
                 }
-                if (i3 == len) {
+                if (i3 === len) {
                     i3 = 0;
                 }
                 p1 = pts[i1];
