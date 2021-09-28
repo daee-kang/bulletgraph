@@ -108,12 +108,9 @@ const BulletGraph = ({
                 ctx.fillStyle = colors[getColorIdx()];
                 ctx.fillRect(prevWidth, GRAPH_Y, width, GRAPH_HEIGHT);
 
-                if (type !== 'infiniteToInfinite') {
-                    let text = start;
-                    if (type === 'percentage') text = "0%";
-                    drawAxisLabel(ctx, text, BAR_PADDING, TEXT_Y, 'start');
-                    drawEndLabel(ctx, getWorldX(startPoint), getWorldX(endPoint), TEXT_Y)
-                }
+                let text = start;
+                if (type === 'percentage') text = "0%";
+                drawAxisLabel(ctx, text, BAR_PADDING, TEXT_Y, 'start');
                 
                 drawLabel(ctx, ranges[i].name, start, ranges[i].x);
                 prevWidth += width;
@@ -131,16 +128,12 @@ const BulletGraph = ({
                 
                 prevWidth += width;
                 
-                if (
-                    type === 'zeroToInfinite' ||
-                    type === 'infiniteToInfinite'
-                    ) { continue; } //don't draw lastindicator
-                    //last element
-                    if (i === ranges.length - 1) {
-                        let label = ranges[i].x;
-                        if (label === undefined) label = getTotalRange();
-                        if (type === 'percentage') label = '100%';
-                        drawAxisLabel(ctx, label, prevWidth, TEXT_Y, 'end');
+                //last element
+                if (i === ranges.length - 1) {
+                    let label = ranges[i].x;
+                    if (label === undefined) label = getTotalRange();
+                    if (type === 'percentage') label = '100%';
+                    drawAxisLabel(ctx, label, prevWidth, TEXT_Y, 'end');
                 }
             }
         }
@@ -460,8 +453,6 @@ const BulletGraph = ({
         ctx.textAlign = align;
         ctx.font = '12px Rubik';
         ctx.fillText(text + ' ' + unit, x, y);
-
-        drawEndLabel(ctx, getWorldX(getMinMax()[0]), getWorldX(getMinMax()[1]), TEXT_Y)
     };
 
     const drawNumber = (ctx, count, xAxis, yAxis, isHovered) => {
@@ -493,15 +484,6 @@ const BulletGraph = ({
         ctx.font = 'bold 16px Rubik';
         ctx.fillText(label, mid, LABEL_Y);
     };
-
-    const drawEndLabel = (ctx, startXAxis, endXAxis, y, align='center') => {
-        // draws the min and max of the bullet graph
-        ctx.fillStyle = 'black';
-        ctx.textAlign = align;
-        ctx.font = '12px Rubik';
-        ctx.fillText(startPoint + ' ' + unit, startXAxis, y)
-        ctx.fillText(endPoint + ' ' + unit, endXAxis, y)
-    }
 
     const zoomIn = () => {
         zoom += 0.5;
