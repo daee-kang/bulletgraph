@@ -2,11 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Canvas2Svg from 'canvas2svg';
 import './BulletGraph.css';
 
-const BulletGraph = (props) => {
-    const canvasRef = useRef(null);
-
-    //props
-    let {
+const BulletGraph = ({
         points, //OPTIONAL: our point data, every point should have a x value minumum so we can map it
         sensorRanges, //OPTIONAL(DEPENDS): ranges for our data to be displayed, rules are written in app.js with examples
         colors, //OPTIONAL: colors for the ranges, will only just cycle one by one
@@ -16,47 +12,50 @@ const BulletGraph = (props) => {
         unit,
         background, //OPTIONAL: sets a background color, transparent if undefined
         fileDownloadName = "bulletgraph", //OPTIONAL: sets file name for download, default is "bulletgraph"
-    } = props;
-
+    }, props) => {
+    const canvasRef = useRef(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false)
     let { ranges, type } = sensorRanges;
-
+    
     //'consts' set in useeffect since it is dependent on our size
     const GRAPH_HEIGHT = barWidth;
     let GRAPH_Y = 0; //this const is set in useEffect
     let TEXT_Y = 0; //this const is set in useEffect
     const BAR_PADDING = barPadding;
     const PADDING = 0.10; //padding is percentage of range and only used for infinite graphs
-
+    
     let zoom = 1;
     let panX = 0;
     let netPanning = 0;
     let panning = false;
-
+    
     let hoveredPoint = null;
-
+    
     let width = 0;
     let height = 0;
-
+    let startPoint = 0;
+    let endPoint = 0;
+    
     /*
     ranges can be of different types
-        zeroToInfinite = [{name: string, x: number}] //if last element, x should be nothing
-        zeroToFinite = [{name: string, x: number}] //if last element, x should have value
-        finiteToFinite =[{name: string, x: number}] //first element should just be {x: number}, no name
-        infiniteToInfinite = null //no ranges here, labels will just be 'negative' and 'positive'
-        percentage = [{name: string, x: float}] //x should be 0.0 through 1.0, but total sum should equal 1.0
+    zeroToInfinite = [{name: string, x: number}] //if last element, x should be nothing
+    zeroToFinite = [{name: string, x: number}] //if last element, x should have value
+    finiteToFinite =[{name: string, x: number}] //first element should just be {x: number}, no name
+    infiniteToInfinite = null //no ranges here, labels will just be 'negative' and 'positive'
+    percentage = [{name: string, x: float}] //x should be 0.0 through 1.0, but total sum should equal 1.0
     */
-
-    //default colors if colors prop not passed
-    //colors basically just cycle through one by one
-    if (colors === undefined) {
-        colors = [
-            '#3494b4',
-            '#ee5876',
-            '#eec832',
-            '#2a9d8f',
+   
+   //default colors if colors prop not passed
+   //colors basically just cycle through one by one
+   if (colors === undefined) {
+       colors = [
+           '#3494b4',
+           '#ee5876',
+           '#eec832',
+           '#2a9d8f',
         ];
     }
-
+    
     //HELPER FUNCTIONS
     //this func is for drawing when no ranges are included, we'll just create based on the type
     const drawRange = (ctx) => {
@@ -66,7 +65,7 @@ const BulletGraph = (props) => {
                 { name: 'negative', x: 0 },
                 { name: 'positive' }
             ];
-
+            
         } else if (type === 'percentage') {
             ranges = [
                 { name: '', x: 1 } //yeah its hacky buttttttttttttt 
@@ -113,39 +112,83 @@ const BulletGraph = (props) => {
                     let text = start;
                     if (type === 'percentage') text = "0%";
                     drawAxisLabel(ctx, text, BAR_PADDING, TEXT_Y, 'start');
+                    drawEndLabel(ctx, getWorldX(startPoint), getWorldX(endPoint), TEXT_Y)
                 }
-
+                
                 drawLabel(ctx, ranges[i].name, start, ranges[i].x);
                 prevWidth += width;
             } else {
                 //end
                 let width = getWidthOfRange(ranges[i - 1].x, ranges[i].x);
-
+                
                 ctx.fillStyle = colors[getColorIdx()];
                 ctx.fillRect(prevWidth, GRAPH_Y, width, GRAPH_HEIGHT);
-
+                
                 let text = ranges[i - 1].x;
                 if (type === 'percentage') text = `${ranges[i - 1].x * 100}%`;
                 drawAxisLabel(ctx, text, prevWidth, TEXT_Y);
                 drawLabel(ctx, ranges[i].name, ranges[i - 1].x, ranges[i].x);
-
+                
                 prevWidth += width;
-
+                
                 if (
                     type === 'zeroToInfinite' ||
                     type === 'infiniteToInfinite'
-                ) { continue; } //don't draw lastindicator
-                //last element
-                if (i === ranges.length - 1) {
-                    let label = ranges[i].x;
-                    if (label === undefined) label = getTotalRange();
-                    if (type === 'percentage') label = '100%';
-                    drawAxisLabel(ctx, label, prevWidth, TEXT_Y, 'end');
+                    ) { continue; } //don't draw lastindicator
+                    //last element
+                    if (i === ranges.length - 1) {
+                        let label = ranges[i].x;
+                        if (label === undefined) label = getTotalRange();
+                        if (type === 'percentage') label = '100%';
+                        drawAxisLabel(ctx, label, prevWidth, TEXT_Y, 'end');
                 }
             }
         }
 
     };
+    
+    const getMinMax = () => {
+        // get the min and the max value
+        switch (type) {
+            case 'finiteToFinite': {
+                startPoint = ranges[0].x;
+                endPoint = ranges[ranges.length - 1].x;
+                return [startPoint, endPoint];
+            }
+            case 'zeroToInfinite': {
+    
+                startPoint = 0;
+                let maxValue = 0;
+                points.forEach(point => {
+                    if (point.x > maxValue) maxValue = parseFloat(point.x);
+                });
+                //basically our biggest point + 10% padding
+                endPoint  = maxValue + maxValue * PADDING;
+    
+                //if our biggest point is less than our ranges, don't use it, make sure all our ranges show
+                if (ranges.length >= 2) {
+                    let lastRange = ranges[ranges.length - 2].x; //x should be gauranteed to be here
+                    //we should try to keep the graph even
+                    let potentialEnd = lastRange + (lastRange * 1 / ranges.length);
+                    potentialEnd = potentialEnd >= 0 ? Math.ceil(potentialEnd) : Math.floor(potentialEnd);
+                    if (potentialEnd > endPoint) endPoint = potentialEnd;
+                }
+                return [startPoint, endPoint];
+            }
+            case 'zeroToFinite': {
+                startPoint = 0;
+                endPoint = ranges[ranges.length - 1].x;
+                return [startPoint, endPoint];
+            }
+            case 'infiniteToInfinite': {
+                return [startPoint, endPoint] = getLeftRightOfInfinites();
+            }
+            case 'percentage': {
+                return [0, 1];
+            }
+            default: break;
+        }
+    }
 
     const getTotalRange = () => {
         switch (type) {
@@ -251,6 +294,7 @@ const BulletGraph = (props) => {
     };
 
     const getWidthOfRange = (start, end) => {
+        // getwidthofrange should really only give you the width in terms of how wide it is on the screen
         let totalWidth = width * zoom - BAR_PADDING * 2;
         let totalRange = getTotalRange();
 
@@ -262,12 +306,17 @@ const BulletGraph = (props) => {
         }
 
         let d = end - start;
+        startPoint = start
+        endPoint = end
         let p = d / totalRange;
 
         return totalWidth * p;
     };
 
     const getWorldX = (x) => {
+// getworldx does one thing:
+// you pass in a value according to the graph. So our ph level is 1.0 - 14.0, and we pass a parameter 12.7
+// it takes 12.7 and calculates where on the page it would draw it based on the range and input you have so basically the yes basically x coordinate.
         const totalRange = getTotalRange();
         const totalWidth = width * zoom - BAR_PADDING * 2;
 
@@ -317,7 +366,7 @@ const BulletGraph = (props) => {
         //if just comment out one of these lines if we don't want it for sure across the graph
         if (point.value !== undefined) toFindWidths.push(`value: ${point.value}`);
         if (point.name !== undefined) toFindWidths.push(point.name);
-        if (point.createdAt !== undefined) toFindWidths.push(point.createdAt);
+        // if (point.createdAt !== undefined) toFindWidths.push(point.createdAt);
         let maxWidth = Math.max(...toFindWidths.map(w => ctx.measureText(w).width)) + tooltipPadding * 5;
 
         //adjust x if going past boundaries based on max width
@@ -342,10 +391,10 @@ const BulletGraph = (props) => {
         }
         if (point.value !== undefined) {
             ctx.fillText(`Value: ${point.value}`, x, y + 10 + tooltipPadding);
-            y += 14;
+            // y += 14;
         }
         // The last tooltip item cannot have an extra 14 pixels on the y axis
-        ctx.fillText(`Created At: ${point.createdAt}`, x, y + 10 + tooltipPadding);
+        // ctx.fillText(`Created At: ${point.createdAt}`, x, y + 10 + tooltipPadding);
     };
 
     //https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-using-html-canvas
@@ -411,6 +460,8 @@ const BulletGraph = (props) => {
         ctx.textAlign = align;
         ctx.font = '12px Rubik';
         ctx.fillText(text + ' ' + unit, x, y);
+
+        drawEndLabel(ctx, getWorldX(getMinMax()[0]), getWorldX(getMinMax()[1]), TEXT_Y)
     };
 
     const drawNumber = (ctx, count, xAxis, yAxis, isHovered) => {
@@ -443,6 +494,15 @@ const BulletGraph = (props) => {
         ctx.fillText(label, mid, LABEL_Y);
     };
 
+    const drawEndLabel = (ctx, startXAxis, endXAxis, y, align='center') => {
+        // draws the min and max of the bullet graph
+        ctx.fillStyle = 'black';
+        ctx.textAlign = align;
+        ctx.font = '12px Rubik';
+        ctx.fillText(startPoint + ' ' + unit, startXAxis, y)
+        ctx.fillText(endPoint + ' ' + unit, endXAxis, y)
+    }
+
     const zoomIn = () => {
         zoom += 0.5;
         netPanning += netPanning / zoom;
@@ -460,6 +520,16 @@ const BulletGraph = (props) => {
         }
         draw(canvasRef.current.getContext('2d'));
     };
+
+    const handleMenu = () => {
+        let menu = document.getElementById("downloadGraph")
+        if (!isMenuOpen) {
+            menu.style.display = "block"
+        } else {
+            menu.style.display = "none"
+        }
+        setIsMenuOpen(!isMenuOpen);
+    }
 
     //DRAW
     const draw = (ctx, svg = false) => {
@@ -481,7 +551,6 @@ const BulletGraph = (props) => {
 
         let drawnPoints = [];
 
-        console.log('drawing points');
         //DRAW THE POINTS
         for (let i = 0; i < points.length; i++) {
             let point = drawPoint(ctx, getWorldX(points[i].x), GRAPH_HEIGHT + GRAPH_Y);
@@ -489,7 +558,7 @@ const BulletGraph = (props) => {
                 path: point,
                 name: points[i].name,
                 value: points[i].x,
-                createdAt: points[i].createdAt,
+                // createdAt: points[i].createdAt,
                 index: i,
             });
             //draw labels eventually
