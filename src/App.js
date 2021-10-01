@@ -12,14 +12,14 @@ function App() {
   );
 
   const [ranges, setRanges] = useState(
-    {
-      type: 'zeroToFinite',
-      ranges: [
-        { name: 'acidic', x: 100 }, //[0, 100]
-        { name: 'neutral', x: 300 }, //(100, 300]
-        { name: 'basic', x: 500 }, //(300, 500]
-      ]
-    }
+  {
+    type: 'infiniteToInfinite',
+    ranges: [ //OPTIONAL: you can leave ranges undefined and it will display negative/positive
+      { name: 'acidic', x: 100 }, //[0, 100]
+      { name: 'neutral', x: 300 }, //(100, 300]
+      { name: 'basic'}, //(300, 500] //no x here!!!
+    ]
+  }
   );
 
   const [unit, SetUnit] = useState("pH");
